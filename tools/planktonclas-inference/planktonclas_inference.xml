@@ -5,7 +5,7 @@
     <requirement type="package" version="24.0">pip</requirement>
   </requirements>
   <command detect_errors="exit_code"><![CDATA[
-pip install --quiet planktonclas==0.2.3 &&
+pip install --user --quiet planktonclas==0.2.3 &&
 python '$__tool_directory__/planktonclas-inference.py'
   ]]></command>
   <environment_variables>
