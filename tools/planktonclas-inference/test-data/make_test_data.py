@@ -16,7 +16,6 @@ Run inside the planktonclas-venv:
     /Users/annef/Documents/ScienceLive/planktonclas-venv/bin/python make_test_data.py
 """
 import json
-import os
 import shutil
 import tarfile
 import zipfile
@@ -24,9 +23,6 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
-
-# Use TF/Keras from the planktonclas environment
-import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 

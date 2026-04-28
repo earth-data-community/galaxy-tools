@@ -14,8 +14,8 @@ single NPZ output with full per-image softmax probabilities.
 - **Model archive** (`.tar.gz`): planktonclas-format model directory
   containing `ckpts/final_model.h5`, `conf.json`, and
   `dataset_files/classes.txt`. Decrop's pretrained model on
-  [Zenodo 15269453](https://doi.org/10.5281/zenodo.15269453) follows this
-  layout.
+  [Zenodo record 15269453](https://zenodo.org/records/15269453) follows
+  this layout.
 - **Image archive** (`.zip`): images referenced by relative path from the
   split file.
 - **Split file**: plain text, one `image_path label` per line. Image paths

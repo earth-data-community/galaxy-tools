@@ -4,7 +4,7 @@ Galaxy tool for Keras image-classifier inference using the
 [planktonclas](https://pypi.org/project/planktonclas/) pipeline. Originally
 built around [Decrop et al. 2025](https://doi.org/10.3389/fmars.2025.1699781)'s
 pretrained EfficientNetV2-B0 phytoplankton classifier
-([Zenodo 15269453](https://doi.org/10.5281/zenodo.15269453)), but applicable
+([Zenodo record 15269453](https://zenodo.org/records/15269453)), but applicable
 to any planktonclas-format model.
 
 The tool runs 10-crop test-time augmentation (TTA) by default — the same
@@ -48,9 +48,9 @@ FIESTA-bio CNN softmax NPZ files (matching Decrop et al. 2025's published
 numbers) requires:
 
 - Decrop's pretrained model archive (`Phytoplankton_EfficientNetV2B0.tar.gz`
-  on [Zenodo 15269453](https://doi.org/10.5281/zenodo.15269453))
+  on [Zenodo record 15269453](https://zenodo.org/records/15269453))
 - LifeWatch FlowCam dataset
-  ([Zenodo 10554845](https://doi.org/10.5281/zenodo.10554845))
+  ([Zenodo record 10554845](https://zenodo.org/records/10554845))
 - Decrop's split files (bundled inside the model tarball at
   `dataset_files/`)
 - Default `crop_num=10` and `top_K=0`

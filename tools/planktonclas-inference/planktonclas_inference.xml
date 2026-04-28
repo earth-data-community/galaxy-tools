@@ -56,8 +56,8 @@ Inputs
 - **Model archive** (``.tar.gz``): planktonclas-format model directory
   containing ``ckpts/final_model.h5``, ``conf.json``, and
   ``dataset_files/classes.txt``. Decrop&#8217;s pretrained model on `Zenodo
-  15269453 &lt;https://doi.org/10.5281/zenodo.15269453&gt;`__ follows this
-  layout.
+  record 15269453 &lt;https://zenodo.org/records/15269453&gt;`__ follows
+  this layout.
 - **Image archive** (``.zip``): images referenced by relative path from
   the split file. Input image sizes are arbitrary &#8212; planktonclas
   resizes every image to ``conf.json``&#8217;s ``model.image_size`` before
