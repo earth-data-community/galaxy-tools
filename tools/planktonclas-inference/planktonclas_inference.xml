@@ -5,8 +5,9 @@
     <requirement type="package" version="24.0">pip</requirement>
   </requirements>
   <command detect_errors="exit_code"><![CDATA[
-pip install --user --quiet planktonclas==0.2.3 &&
-python '$__tool_directory__/planktonclas-inference.py'
+mkdir -p tool_pkgs &&
+pip install --quiet --target=tool_pkgs planktonclas==0.2.3 &&
+PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/planktonclas-inference.py'
   ]]></command>
   <environment_variables>
     <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
