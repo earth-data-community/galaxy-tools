@@ -16,16 +16,17 @@ Reproducibility of the FIESTA bio chain's canonical numbers happens at the
 workflow level, not here.
 """
 
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 OUT = Path(__file__).parent
 OUT.mkdir(parents=True, exist_ok=True)
 rng = np.random.default_rng(42)
 
 CLASSES = ["RareTaxon", "CommonA", "CommonB", "CommonC"]
-TRAIN_PER_CLASS = [5, 20, 20, 20]   # class 0 is "rare" (< default threshold of 200,
-                                    # but for the small test we'll pass threshold=10)
+# class 0 is rare (< default threshold 200; the test passes threshold=10)
+TRAIN_PER_CLASS = [5, 20, 20, 20]
 VAL_PER_CLASS = [4, 4, 4, 4]
 TEST_PER_CLASS = [4, 4, 4, 4]
 N_FEAT = 4
@@ -44,13 +45,13 @@ def make_split(per_class, prefix):
     return np.stack(X), np.array(y, dtype=np.int64), np.array(paths)
 
 
-X_tr, y_tr, _        = make_split(TRAIN_PER_CLASS, "train")
-X_val, y_val, p_val  = make_split(VAL_PER_CLASS,   "val")
+X_tr, y_tr, _ = make_split(TRAIN_PER_CLASS, "train")
+X_val, y_val, p_val = make_split(VAL_PER_CLASS, "val")
 X_test, y_test, p_test = make_split(TEST_PER_CLASS, "test")
 
-np.savez(OUT / "features_train.npz", X=X_tr,   y=y_tr)
-np.savez(OUT / "features_val.npz",   X=X_val,  y=y_val,  paths=p_val)
-np.savez(OUT / "features_test.npz",  X=X_test, y=y_test, paths=p_test)
+np.savez(OUT / "features_train.npz", X=X_tr, y=y_tr)
+np.savez(OUT / "features_val.npz", X=X_val, y=y_val, paths=p_val)
+np.savez(OUT / "features_test.npz", X=X_test, y=y_test, paths=p_test)
 
 
 def make_cnn_probs(y, paths):
@@ -63,10 +64,10 @@ def make_cnn_probs(y, paths):
     return probs.astype(np.float32), np.array(paths)
 
 
-cnn_val_probs,  cnn_val_paths  = make_cnn_probs(y_val,  p_val)
+cnn_val_probs, cnn_val_paths = make_cnn_probs(y_val, p_val)
 cnn_test_probs, cnn_test_paths = make_cnn_probs(y_test, p_test)
 
-np.savez(OUT / "cnn_val.npz",  full_probs=cnn_val_probs,  paths=cnn_val_paths)
+np.savez(OUT / "cnn_val.npz", full_probs=cnn_val_probs, paths=cnn_val_paths)
 np.savez(OUT / "cnn_test.npz", full_probs=cnn_test_probs, paths=cnn_test_paths)
 
 (OUT / "classes.txt").write_text("\n".join(CLASSES) + "\n")
