@@ -1,0 +1,110 @@
+<tool id="planktonclas_inference" name="planktonclas-inference" version="0.1.0+galaxy0" profile="24.0">
+  <description>Keras image-classifier inference using the planktonclas pipeline (10-crop TTA)</description>
+  <requirements>
+    <requirement type="package" version="3.11">python</requirement>
+    <requirement type="package" version="24.0">pip</requirement>
+  </requirements>
+  <command detect_errors="exit_code"><![CDATA[
+pip install --quiet planktonclas==0.2.3 &&
+python '$__tool_directory__/planktonclas-inference.py'
+  ]]></command>
+  <environment_variables>
+    <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
+    <environment_variable name="GALAXY_TOOL_DIR">$__tool_directory__</environment_variable>
+  </environment_variables>
+  <configfiles>
+    <inputs name="inputs" filename="inputs.json" data_style="paths" />
+  </configfiles>
+  <inputs>
+    <param name="model_archive" type="data" format="tgz,tar" label="planktonclas-format model archive (.tar.gz with ckpts/final_model.h5, conf.json, dataset_files/classes.txt)" optional="false" />
+    <param name="images_archive" type="data" format="zip" label="Image archive (.zip), images referenced by relative path in the split file" optional="false" />
+    <param name="split_file" type="data" format="txt" label="Split file with one 'image_path label' per line; image_path is relative to the image archive root" optional="false" />
+    <param name="top_K" type="integer" value="0" label="Top-K predictions to keep in full_probs (0 = full softmax = num_classes; matches FIESTA-bio canonical NPZ schema)" optional="false" />
+    <param name="crop_num" type="integer" value="10" label="Number of TTA crops (10 matches Decrop's canonical pipeline; set to 1 to disable TTA)" optional="false" />
+  </inputs>
+  <outputs>
+    <data label="${tool.name} -&gt; predictions" name="out_planktonclas_inference_predictions" format="auto" from_work_dir="predictions_galaxy.output" />
+  </outputs>
+  <tests>
+    <test expect_num_outputs="1">
+      <param name="model_archive" value="model.tar.gz" />
+      <param name="images_archive" value="images.zip" />
+      <param name="split_file" value="split.txt" />
+      <param name="top_K" value="0" />
+      <param name="crop_num" value="1" />
+      <assert_stdout>
+        <has_text text="*** Job finished successfully ***" />
+      </assert_stdout>
+    </test>
+  </tests>
+  <help>planktonclas-inference
+======================
+
+Galaxy tool that runs Keras image-classifier inference using the
+`planktonclas &lt;https://pypi.org/project/planktonclas/&gt;`__ pipeline.
+Originally built around Decrop et al.&#160;2025&#8217;s pretrained
+EfficientNetV2-B0 phytoplankton classifier, but applicable to any
+planktonclas-format model.
+
+The tool runs 10-crop test-time augmentation (TTA) by default &#8212; the same
+configuration used to produce Decrop&#8217;s canonical results &#8212; and writes a
+single NPZ output with full per-image softmax probabilities.
+
+Inputs
+------
+
+- **Model archive** (``.tar.gz``): planktonclas-format model directory
+  containing ``ckpts/final_model.h5``, ``conf.json``, and
+  ``dataset_files/classes.txt``. Decrop&#8217;s pretrained model on `Zenodo
+  15269453 &lt;https://doi.org/10.5281/zenodo.15269453&gt;`__ follows this
+  layout.
+- **Image archive** (``.zip``): images referenced by relative path from
+  the split file. Input image sizes are arbitrary &#8212; planktonclas
+  resizes every image to ``conf.json``&#8217;s ``model.image_size`` before
+  inference.
+- **Split file**: plain text, one ``image_path label`` per line. Image
+  paths are relative to the image archive root.
+
+Parameters
+----------
+
+- ``top_K`` (default ``0`` = full softmax) &#8212; number of top predictions
+  to keep. ``0`` means return the full ``(N, num_classes)`` softmax
+  matrix &#8212; matches the FIESTA-bio canonical output schema.
+- ``crop_num`` (default ``10``) &#8212; number of TTA crops. ``10`` matches
+  Decrop&#8217;s canonical pipeline; ``1`` disables TTA. Disabling TTA will
+  diverge from Decrop&#8217;s published numbers.
+
+Output
+------
+
+NPZ file with arrays:
+
+- ``y_true`` (int64): labels from the split file
+- ``y_pred`` (int64): top-1 predicted class index per image
+- ``full_probs`` (float16): ``(N, num_classes)`` softmax matrix when
+  ``top_K=0``, or ``(N, top_K)`` sparse probabilities otherwise
+- ``paths`` (str): absolute paths of resolved images, in the same row
+  order as ``full_probs``
+
+The output schema is compatible with ``cnn_predictions_*.npz`` consumed
+by the ``scattering-stacking`` Galaxy tool in the FIESTA-bio chain.
+
+Origin
+------
+
+Wraps the inference logic from
+`fiesta-scattering-bio/02_cnn_predictions.py &lt;https://github.com/annefou/fiesta-scattering-bio/blob/main/02_cnn_predictions.py&gt;`__.
+The tool is honestly coupled to planktonclas &#8212; the 10-crop TTA, custom
+Keras objects, and config schema are all inherited from that package.
+</help>
+  <citations>
+    <citation type="doi">10.3389/fmars.2025.1699781</citation>
+    <citation type="bibtex">@software{planktonclas,
+            author = {{LifeWatch Belgium / VLIZ}},
+            title = {planktonclas: FlowCam phytoplankton classification},
+            url = {https://github.com/lifewatch/planktonclas},
+            year = {2025}
+        }</citation>
+  </citations>
+</tool>
