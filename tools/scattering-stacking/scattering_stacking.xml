@@ -1,0 +1,98 @@
+<tool id="scattering_stacking" name="scattering-stacking" version="0.1.0+galaxy0" profile="24.0">
+  <requirements>
+    <requirement type="package" version="1.4.2">scikit-learn</requirement>
+    <requirement type="package" version="1.26.4">numpy</requirement>
+  </requirements>
+  <command detect_errors="exit_code">python '$__tool_directory__/scattering-stacking.py'</command>
+  <environment_variables>
+    <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
+    <environment_variable name="GALAXY_TOOL_DIR">$__tool_directory__</environment_variable>
+  </environment_variables>
+  <configfiles>
+    <inputs name="inputs" filename="inputs.json" data_style="paths" />
+  </configfiles>
+  <inputs>
+    <param name="features_train_npz" type="data" label="Scattering features (balanced training set) &#8212; npz with arrays X (n_samples, n_features) and y (n_samples,) class labels" format="data" optional="false" />
+    <param name="features_val_npz" type="data" label="Scattering features (validation) &#8212; npz with X, y, and paths" format="data" optional="false" />
+    <param name="features_test_npz" type="data" label="Scattering features (test) &#8212; npz with X, y, and paths" format="data" optional="false" />
+    <param name="cnn_val_npz" type="data" label="Deep-model softmax probabilities on val &#8212; npz with full_probs (n_samples, n_classes) and paths" format="data" optional="false" />
+    <param name="cnn_test_npz" type="data" label="Deep-model softmax probabilities on test &#8212; npz with full_probs and paths" format="data" optional="false" />
+    <param name="classes_file" type="data" label="Class names, one per line, in label-index order" format="data" optional="false" />
+    <param name="train_split_file" type="data" label="Training-split file with 'image_path label' lines, used to count per-class training sizes" format="data" optional="false" />
+    <param name="C" type="float" value="1.0" label="LogisticRegression regularisation strength (smaller = more regularisation)" optional="false" />
+    <param name="max_iter" type="integer" value="2000" label="Maximum LogisticRegression iterations" optional="false" />
+    <param name="rare_class_threshold" type="integer" value="200" label="Train-count threshold below which a class is considered rare (used for mean rare-class recall)" optional="false" />
+  </inputs>
+  <outputs>
+    <data label="${tool.name} -&gt; scattering-stacking results_json" name="out_scattering_stacking_results_json" format="auto" from_work_dir="results_json_galaxy.output" />
+    <data label="${tool.name} -&gt; scattering-stacking stacking_model" name="out_scattering_stacking_stacking_model" format="auto" from_work_dir="stacking_model_galaxy.output" />
+  </outputs>
+  <tests>
+    <test expect_num_outputs="2">
+      <param name="features_train_npz" value="features_train.npz" />
+      <param name="features_val_npz" value="features_val.npz" />
+      <param name="features_test_npz" value="features_test.npz" />
+      <param name="cnn_val_npz" value="cnn_val.npz" />
+      <param name="cnn_test_npz" value="cnn_test.npz" />
+      <param name="classes_file" value="classes.txt" />
+      <param name="train_split_file" value="train.txt" />
+      <param name="C" value="1.0" />
+      <param name="max_iter" value="500" />
+      <param name="rare_class_threshold" value="10" />
+      <assert_stdout>
+        <has_text text="*** Job finished successfully ***" />
+      </assert_stdout>
+    </test>
+  </tests>
+  <help>Scattering Stacking &#8212; class-weighted meta-classifier
+====================================================
+
+Combines a deep model&#8217;s softmax probabilities (e.g., a CNN classifier
+output) with multi-scale scattering features via a class-weighted
+logistic-regression meta-classifier. The stacking is trained on a
+validation split and evaluated on a held-out test split.
+
+Inputs
+------
+
+- **Scattering features** (training-balanced, validation, test): NPZ
+  files containing arrays ``X`` (n_samples, n_features) and ``y``
+  (n_samples,) class labels. Validation and test files must also contain
+  a ``paths`` array with one image identifier per row, used to align
+  with the deep-model predictions.
+- **Deep-model softmax probabilities** (validation, test): NPZ files
+  containing arrays ``full_probs`` (n_samples, n_classes) and ``paths``
+  (or ``val_paths``/``test_paths``) for alignment.
+- **Class names file**: plain text, one class name per line, in
+  label-index order.
+- **Training split file**: plain text with one ``image_path label`` per
+  line (the standard ``planktonclas`` train/val/test format), used to
+  count per-class training-set sizes for the rare-class definition.
+
+Outputs
+-------
+
+- **Results JSON** &#8212; top-1, top-5, mean rare-class recall, and per-class
+  comparison for the deep model alone, scattering alone, a 50/50
+  probability ensemble, the stacked meta-classifier, and a hard-switch
+  oracle ceiling.
+- **Trained model** &#8212; joblib pickle of the fitted ``StandardScaler``,
+  the scattering-LR classifier, and the stacking meta-classifier.
+
+Origin
+------
+
+Originally developed for the FIESTA-OSCARS plankton classification chain
+(`fiesta-scattering-bio &lt;https://github.com/annefou/fiesta-scattering-bio&gt;`__),
+which extends the EfficientNetV2-B0 phytoplankton classifier of Decrop
+et al.&#160;2025 with multi-scale scattering features computed via FOSCAT
+(`Delouis et al.&#160;2022 &lt;https://doi.org/10.1051/0004-6361/202244566&gt;`__).
+The tool itself is dataset-agnostic &#8212; any classification problem with
+paired deep-model softmax probabilities and an independent feature
+representation can be stacked this way.
+</help>
+  <citations>
+    <citation type="doi">10.3389/fmars.2025.1699781</citation>
+    <citation type="doi">10.1051/0004-6361/202244566</citation>
+  </citations>
+</tool>
