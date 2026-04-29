@@ -11,15 +11,20 @@ import shutil
 # Galaxy tool parameters — Papermill convention with ODA semantic annotations.
 # Defaults are placeholders; Galaxy injects real values at runtime.
 
-target_map = "target.npy"  # oda:POSIXPath; oda:label "Target reference map (.npy, 1D HEALPix array of length 12*nside^2). The synthesis will match this map's scattering statistics."
+target_map = "target.npy"  # oda:POSIXPath; oda:label "Target reference map (.npy). Shape (n_pixels,) or (1, n_pixels) for HEALPix; (H, W) or (1, H, W) for 2D images."
 starting_map = ""  # oda:POSIXPath; oda:label "Optional starting map (.npy, same shape as target). Leave empty to generate random noise scaled to target's mean/std."
-eval_mask = ""  # oda:POSIXPath; oda:label "Optional evaluation mask (.npy, same shape as target). Restricts where the scattering statistics are computed (e.g. ocean-only). Leave empty to use all pixels."
-update_mask = ""  # oda:POSIXPath; oda:label "Optional update mask (.npy, same shape as target). Restricts which pixels the synthesis updates (e.g. cloudy regions only — for gap-filling). Leave empty to update all pixels."
+eval_mask = ""  # oda:POSIXPath; oda:label "Optional evaluation mask (.npy, same shape as target). Restricts where the scattering statistics are computed."
+update_mask = ""  # oda:POSIXPath; oda:label "Optional update mask (.npy, same shape as target). Restricts which pixels the synthesis updates (FOSCAT grd_mask)."
+
+domain = "healpix"  # oda:String; oda:label "Input domain: 'healpix' for 1D HEALPix arrays or 'image_2d' for 2D rectangular images."
 
 norient = 4  # oda:Integer; oda:label "Number of orientations for the scattering transform (FOSCAT NORIENT)"
 kernelsz = 3  # oda:Integer; oda:label "Kernel size for the scattering transform (FOSCAT KERNELSZ)"
 nsteps = 300  # oda:Integer; oda:label "Number of synthesis iterations (NUM_EPOCHS in FOSCAT)"
 seed = 1234  # oda:Integer; oda:label "Random seed for the starting noise (used only when starting_map is empty)"
+
+do_lbfgs = True  # oda:Boolean; oda:label "Use L-BFGS optimizer (default true). Set false for the FOSCAT first-order fallback."
+eval_frequency = 0  # oda:Integer; oda:label "Validation print frequency in iterations (0 = nsteps/10, the FOSCAT default)."
 
 _galaxy_wd = os.getcwd()
 
@@ -33,10 +38,28 @@ target_map = str(inp_pdic["target_map"])
 starting_map = str(inp_pdic.get("starting_map", "") or "")
 eval_mask = str(inp_pdic.get("eval_mask", "") or "")
 update_mask = str(inp_pdic.get("update_mask", "") or "")
+domain = str(inp_pdic.get("domain", "healpix") or "healpix")
 norient = int(inp_pdic["norient"])
 kernelsz = int(inp_pdic["kernelsz"])
 nsteps = int(inp_pdic["nsteps"])
 seed = int(inp_pdic["seed"])
+
+# Advanced options can come either as a flat 'advanced' subdict or as
+# top-level keys. Both are accepted.
+_adv = inp_pdic.get("advanced") or {}
+if isinstance(_adv, dict):
+    do_lbfgs = bool(_adv.get("do_lbfgs", inp_pdic.get("do_lbfgs", True)))
+    eval_frequency = int(
+        _adv.get("eval_frequency", inp_pdic.get("eval_frequency", 0)) or 0
+    )
+else:
+    do_lbfgs = bool(inp_pdic.get("do_lbfgs", True))
+    eval_frequency = int(inp_pdic.get("eval_frequency", 0) or 0)
+
+if domain not in ("healpix", "image_2d"):
+    raise ValueError(
+        f"Unsupported domain '{domain}'; expected 'healpix' or 'image_2d'."
+    )
 
 # Avoid macOS / Linux libomp duplicate-symbol issues seen with FOSCAT
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
@@ -48,24 +71,49 @@ import numpy as np
 
 work = Path.cwd()
 
+
+def _to_foscat_shape(arr, domain_):
+    """Reshape an input array to the form FOSCAT expects.
+
+    HEALPix: (n_pixels,) or (1, n_pixels) -> (1, n_pixels)
+    2D image: (H, W) or (1, H, W) -> (1, H, W)
+    """
+    a = np.asarray(arr, dtype=np.float32)
+    if domain_ == "healpix":
+        if a.ndim == 1:
+            return a.reshape(1, a.shape[0])
+        if a.ndim == 2 and a.shape[0] == 1:
+            return a
+        raise ValueError(
+            f"HEALPix input must be 1D or (1, N); got shape {a.shape}"
+        )
+    # image_2d
+    if a.ndim == 2:
+        return a.reshape(1, a.shape[0], a.shape[1])
+    if a.ndim == 3 and a.shape[0] == 1:
+        return a
+    raise ValueError(
+        f"2D-image input must be 2D (H, W) or 3D (1, H, W); got shape {a.shape}"
+    )
+
+
 # %% [markdown]
-# ## 1. Load target map and optional inputs
+# ## 1. Load target and optional inputs
 
 # %%
-target = np.load(target_map).astype(np.float32)
-if target.ndim == 1:
-    target = target.reshape(1, target.shape[0])
-elif target.ndim != 2:
-    raise ValueError(
-        f"Expected 1D or 2D target array; got shape {target.shape}"
-    )
+target = _to_foscat_shape(np.load(target_map), domain)
 print(
-    f"Target: shape {target.shape}, range [{target.min():.4f}, {target.max():.4f}]"
+    f"Target ({domain}): shape {target.shape}, "
+    f"range [{target.min():.4f}, {target.max():.4f}], "
+    f"mean={target.mean():.4f}, std={target.std():.4f}"
 )
-print(f"  mean={target.mean():.4f}, std={target.std():.4f}")
 
-if starting_map and Path(starting_map).is_file() and Path(starting_map).stat().st_size > 0:
-    start = np.load(starting_map).astype(np.float32)
+if (
+    starting_map
+    and Path(starting_map).is_file()
+    and Path(starting_map).stat().st_size > 0
+):
+    start = _to_foscat_shape(np.load(starting_map), domain)
     if start.shape != target.shape:
         start = start.reshape(target.shape)
     print(f"Starting map (provided): shape {start.shape}")
@@ -79,20 +127,21 @@ else:
     )
 
 
-def _load_mask_or_none(path_arg, target_shape):
+def _load_mask_or_none(path_arg, target_shape, domain_):
     if not path_arg:
         return None
     p = Path(path_arg)
     if not p.is_file() or p.stat().st_size == 0:
         return None
-    m = np.load(path_arg).astype(np.float32)
+    raw = np.load(path_arg)
+    m = _to_foscat_shape(raw, domain_)
     if m.shape != target_shape:
         m = m.reshape(target_shape)
     return m
 
 
-eval_mask_arr = _load_mask_or_none(eval_mask, target.shape)
-update_mask_arr = _load_mask_or_none(update_mask, target.shape)
+eval_mask_arr = _load_mask_or_none(eval_mask, target.shape, domain)
+update_mask_arr = _load_mask_or_none(update_mask, target.shape, domain)
 
 print(
     f"Eval mask: {'provided' if eval_mask_arr is not None else 'all pixels'}, "
@@ -106,14 +155,21 @@ print(
 import foscat.scat_cov as sc
 import foscat.Synthesis as synthe
 
-scat = sc.funct(
-    NORIENT=norient,
-    KERNELSZ=kernelsz,
-    all_type="float32",
-    silent=True,
-)
+scat_kwargs = {
+    "NORIENT": norient,
+    "KERNELSZ": kernelsz,
+    "all_type": "float32",
+    "silent": True,
+}
+if domain == "image_2d":
+    scat_kwargs["use_2D"] = True
+
+scat = sc.funct(**scat_kwargs)
 print(f"FOSCAT device: {scat.backend.device}")
-print(f"Config: NORIENT={norient}, KERNELSZ={kernelsz}, NSTEPS={nsteps}")
+print(
+    f"Config: domain={domain}, NORIENT={norient}, KERNELSZ={kernelsz}, "
+    f"NSTEPS={nsteps}, do_lbfgs={do_lbfgs}"
+)
 
 # %% [markdown]
 # ## 3. Compute reference scattering coefficients
@@ -154,10 +210,12 @@ sy = synthe.Synthesis([loss])
 print(f"Running synthesis: {nsteps} steps...")
 t0 = time.time()
 
+eval_freq = eval_frequency if eval_frequency > 0 else max(nsteps // 10, 1)
+
 run_kwargs = {
-    "EVAL_FREQUENCY": max(nsteps // 10, 1),
+    "EVAL_FREQUENCY": eval_freq,
     "NUM_EPOCHS": nsteps,
-    "do_lbfgs": True,
+    "do_lbfgs": bool(do_lbfgs),
 }
 if update_mask_arr is not None:
     run_kwargs["grd_mask"] = scat.backend.bk_cast(update_mask_arr)
@@ -209,10 +267,13 @@ synthesis_npy = "synthesis.npy"
 np.save(synthesis_npy, omap_np)
 
 results = {
+    "domain": domain,
     "norient": int(norient),
     "kernelsz": int(kernelsz),
     "nsteps": int(nsteps),
     "seed": int(seed),
+    "do_lbfgs": bool(do_lbfgs),
+    "eval_frequency": int(eval_freq),
     "target_shape": list(target.shape),
     "elapsed_s": float(elapsed),
     "device": str(scat.backend.device),
@@ -225,7 +286,9 @@ results = {
     "scat_improvement_pct": float(improvement_pct),
     "used_eval_mask": eval_mask_arr is not None,
     "used_update_mask": update_mask_arr is not None,
-    "used_provided_starting_map": bool(starting_map and Path(starting_map).is_file()),
+    "used_provided_starting_map": bool(
+        starting_map and Path(starting_map).is_file()
+    ),
 }
 
 results_json = "synthesis_results.json"

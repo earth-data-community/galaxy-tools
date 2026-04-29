@@ -1,9 +1,14 @@
 # foscat-synthesis
 
-Galaxy tool that synthesizes a HEALPix map (or fills gaps in an observed
-map) so that its multi-scale scattering-transform statistics match a
-target reference, using [FOSCAT](https://github.com/jmdelouis/FOSCAT)
+Galaxy tool that synthesizes a HEALPix map **or a 2D image** (or fills
+gaps in either) so that its multi-scale scattering-transform statistics
+match a target reference, using
+[FOSCAT](https://github.com/jmdelouis/FOSCAT)
 ([Delouis et al. 2022](https://doi.org/10.1051/0004-6361/202244566)).
+
+The `domain` parameter selects between HEALPix (1D arrays of length
+`12 * nside**2`) and 2D rectangular images (any `(H, W)`). Both modes
+support pure synthesis and gap-filling.
 
 ## Two modes from one tool
 
@@ -47,10 +52,18 @@ validation summary.
 
 | Parameter | Default | Meaning |
 |---|---|---|
+| `domain` | `healpix` | `healpix` (1D HEALPix) or `image_2d` (2D rectangular image — sets FOSCAT's `use_2D=True` internally). |
 | `norient` | `4` | FOSCAT `NORIENT` — orientations for the scattering transform. |
 | `kernelsz` | `3` | FOSCAT `KERNELSZ` — kernel size. |
 | `nsteps` | `300` | Synthesis iterations (`NUM_EPOCHS`). |
 | `seed` | `1234` | Seed for the random starting noise (used only when no starting map is provided). |
+
+### Advanced options (collapsed by default)
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `do_lbfgs` | `true` | Use L-BFGS optimizer. Uncheck to use FOSCAT's first-order fallback. |
+| `eval_frequency` | `0` (= `nsteps/10`) | How often, in iterations, the loss is printed during synthesis. |
 
 ## Outputs
 
