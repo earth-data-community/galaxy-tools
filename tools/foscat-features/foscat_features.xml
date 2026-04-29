@@ -1,0 +1,111 @@
+<tool id="foscat_features" name="foscat-features" version="0.1.0+galaxy0" profile="24.0">
+  <description>Multi-scale scattering feature extraction from RGB images via FOSCAT</description>
+  <requirements>
+    <requirement type="package" version="3.11">python</requirement>
+    <requirement type="package" version="24.0">pip</requirement>
+    <requirement type="package" version="2.2.6">numpy</requirement>
+    <requirement type="package" version="11.2.1">pillow</requirement>
+  </requirements>
+  <command detect_errors="exit_code"><![CDATA[
+mkdir -p tool_pkgs &&
+pip install --quiet --target=tool_pkgs 'foscat>=2026.4.1' &&
+PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/foscat-features.py'
+  ]]></command>
+  <environment_variables>
+    <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
+    <environment_variable name="GALAXY_TOOL_DIR">$__tool_directory__</environment_variable>
+    <environment_variable name="MPLBACKEND">Agg</environment_variable>
+  </environment_variables>
+  <configfiles>
+    <inputs name="inputs" filename="inputs.json" data_style="paths" />
+  </configfiles>
+  <inputs>
+    <param name="images_archive" type="data" format="zip" label="Image archive (.zip), images referenced by relative path in the split file" optional="false" />
+    <param name="split_file" type="data" format="txt" label="Split file with one 'image_path label' per line; image_path is relative to the image archive root" optional="false" />
+    <param name="target_size" type="integer" value="64" label="Target image size in pixels (square; images are resized to target_size x target_size before scattering)" optional="false" />
+    <param name="norient" type="integer" value="8" label="Number of orientations for the scattering transform (FOSCAT NORIENT)" optional="false" />
+    <param name="kernelsz" type="integer" value="3" label="Kernel size for the scattering transform (FOSCAT KERNELSZ)" optional="false" />
+  </inputs>
+  <outputs>
+    <data label="${tool.name} -&gt; features" name="out_foscat_features_features" format="auto" from_work_dir="features_galaxy.output" />
+  </outputs>
+  <tests>
+    <test expect_num_outputs="1">
+      <param name="images_archive" value="images.zip" />
+      <param name="split_file" value="split.txt" />
+      <param name="target_size" value="64" />
+      <param name="norient" value="8" />
+      <param name="kernelsz" value="3" />
+      <assert_stdout>
+        <has_text text="*** Job finished successfully ***" />
+      </assert_stdout>
+    </test>
+  </tests>
+  <help>foscat-features
+===============
+
+Extract multi-scale scattering features from a set of RGB images using
+`FOSCAT &lt;https://github.com/jmdelouis/FOSCAT&gt;`__ (Delouis et al.&#160;2022).
+For each image, the tool runs the scattering transform per RGB channel
+and concatenates the resulting statistics (``S0, S1, S2, P00, P11,
+P01`` where available) into a single feature vector. Output is a
+single NPZ holding the feature matrix, labels from the split file, and
+the resolved image paths.
+
+Inputs
+------
+
+- **Image archive** (``.zip``): images referenced by relative path from
+  the split file. Sizes can be heterogeneous &#8212; each image is resized
+  to ``target_size`` &#215; ``target_size`` before scattering.
+- **Split file**: plain text, one ``image_path label`` per line. Image
+  paths are relative to the image archive root.
+
+Parameters
+----------
+
+- ``target_size`` (default ``64``) &#8212; target image size in pixels
+  (square). All images are resized before scattering.
+- ``norient`` (default ``8``) &#8212; number of orientations for the
+  scattering transform (FOSCAT ``NORIENT``).
+- ``kernelsz`` (default ``3``) &#8212; kernel size for the scattering
+  transform (FOSCAT ``KERNELSZ``).
+
+With the default ``NORIENT=8``, ``KERNELSZ=3``, ``target_size=64``,
+the per-image feature dimension is **246** (3 channels &#215; 82
+statistics) &#8212; matching the FIESTA-bio chain configuration.
+
+Output
+------
+
+NPZ file with arrays:
+
+- ``X`` (float32): ``(n_kept, n_features)`` feature matrix
+- ``y`` (int64): labels from the split file, aligned to ``X`` rows
+- ``paths`` (str): absolute paths of resolved images, in the same row
+  order as ``X``
+
+The output schema is compatible with ``features_*.npz`` consumed by the
+``scattering-stacking`` Galaxy tool in the FIESTA-bio chain.
+
+Origin
+------
+
+Wraps the scattering-feature extraction logic from
+`fiesta-scattering-bio/01_scattering_features.py
+&lt;https://github.com/annefou/fiesta-scattering-bio/blob/main/01_scattering_features.py&gt;`__.
+The tool is dataset-agnostic &#8212; any RGB image classification
+problem can use this feature representation. Dataset download,
+split-file generation, and class-balanced sub-sampling all live at the
+workflow level (WorkflowHub), not in this tool.
+</help>
+  <citations>
+    <citation type="doi">10.1051/0004-6361/202244566</citation>
+    <citation type="bibtex">@software{foscat,
+            author = {Delouis, Jean-Marc and Fouilloux, Anne and contributors},
+            title = {{FOSCAT}: scattering transform on 2D and HEALPix data},
+            url = {https://github.com/jmdelouis/FOSCAT},
+            year = {2026}
+        }</citation>
+  </citations>
+</tool>
