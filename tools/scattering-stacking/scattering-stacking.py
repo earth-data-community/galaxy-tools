@@ -78,7 +78,8 @@ rare_idx = np.array(
         i
         for i in range(N_CLASSES)
         if train_counts.get(i, 0) < rare_class_threshold
-    ]
+    ],
+    dtype=np.int64,
 )
 print(f"Rare classes (train < {rare_class_threshold}): {len(rare_idx)}")
 
