@@ -7,6 +7,7 @@
   <command detect_errors="exit_code"><![CDATA[
 mkdir -p tool_pkgs &&
 pip install --quiet --target=tool_pkgs planktonclas==0.2.3 &&
+pip install --quiet --target=tool_pkgs --upgrade --force-reinstall opencv-python-headless &&
 PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/planktonclas-inference.py'
   ]]></command>
   <environment_variables>
