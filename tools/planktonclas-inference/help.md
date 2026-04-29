@@ -12,7 +12,7 @@ single NPZ output with full per-image softmax probabilities.
 ## Inputs
 
 - **Model archive** (`.tar.gz`): planktonclas-format model directory
-  containing `ckpts/final_model.h5`, `conf.json`, and
+  containing `ckpts/final_model.h5`, `conf/conf.json`, and
   `dataset_files/classes.txt`. Decrop's pretrained model on
   [Zenodo record 15269453](https://zenodo.org/records/15269453) follows
   this layout.

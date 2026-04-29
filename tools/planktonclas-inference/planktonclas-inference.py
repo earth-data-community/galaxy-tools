@@ -78,7 +78,17 @@ else:
     images_root = images_dir
 print(f"Images root: {images_root}")
 
-with open(model_dir / "conf.json") as f:
+# planktonclas's published model bundles put conf.json in a `conf/`
+# subdirectory; some hand-built archives put it at the model root. Look
+# in both.
+_conf_candidates = [model_dir / "conf" / "conf.json", model_dir / "conf.json"]
+_conf_path = next((p for p in _conf_candidates if p.exists()), None)
+if _conf_path is None:
+    raise FileNotFoundError(
+        f"conf.json not found at any of: {_conf_candidates}"
+    )
+print(f"Loading config from {_conf_path}")
+with open(_conf_path) as f:
     conf = json.load(f)
 N_CLASSES = conf["model"]["num_classes"]
 print(

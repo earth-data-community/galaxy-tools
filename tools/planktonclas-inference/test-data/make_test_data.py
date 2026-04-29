@@ -3,7 +3,7 @@ Generate minimal test fixtures for the planktonclas-inference Galaxy tool.
 
 Produces:
   - model.tar.gz : planktonclas-format archive (ckpts/final_model.h5,
-                   conf.json, dataset_files/classes.txt) for a tiny
+                   conf/conf.json, dataset_files/classes.txt) for a tiny
                    3-class CNN on 32x32 RGB inputs.
   - images.zip   : 6 synthetic 32x32 RGB jpg images, 2 per class.
   - split.txt    : 6 lines of 'image_path label'.
@@ -60,9 +60,15 @@ model.compile(optimizer="adam", loss="sparse_categorical_crossentropy")
 print("Model summary:")
 model.summary()
 
-# Save in planktonclas-expected layout: <model_dir>/ckpts/final_model.h5
+# Save in planktonclas-expected layout (matching what the published
+# Phytoplankton_EfficientNetV2B0 bundle on Zenodo 15269453 ships):
+#   <model_dir>/
+#     ckpts/final_model.h5
+#     conf/conf.json
+#     dataset_files/classes.txt
 MODEL_DIR = WORK / "tiny_model"
 (MODEL_DIR / "ckpts").mkdir(parents=True)
+(MODEL_DIR / "conf").mkdir()
 (MODEL_DIR / "dataset_files").mkdir()
 
 model.save(str(MODEL_DIR / "ckpts" / "final_model.h5"))
@@ -95,7 +101,7 @@ conf = {
         "timestamp": None,
     },
 }
-with open(MODEL_DIR / "conf.json", "w") as f:
+with open(MODEL_DIR / "conf" / "conf.json", "w") as f:
     json.dump(conf, f, indent=2)
 
 # --- 3. classes.txt ----------------------------------------------------------

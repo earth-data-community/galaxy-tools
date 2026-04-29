@@ -14,7 +14,7 @@ single NPZ output with full per-image softmax probabilities.
 ## Inputs
 
 - **Model archive** (`.tar.gz`): planktonclas-format model directory with
-  `ckpts/final_model.h5`, `conf.json`, `dataset_files/classes.txt`.
+  `ckpts/final_model.h5`, `conf/conf.json`, `dataset_files/classes.txt`.
 - **Image archive** (`.zip`): images referenced by relative path from the
   split file. Sizes can be heterogeneous — each image is resized to
   `conf.json`'s `model.image_size` before inference.

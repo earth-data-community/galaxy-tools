@@ -18,7 +18,7 @@ PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/planktoncl
     <inputs name="inputs" filename="inputs.json" data_style="paths" />
   </configfiles>
   <inputs>
-    <param name="model_archive" type="data" format="tgz,tar" label="planktonclas-format model archive (.tar.gz with ckpts/final_model.h5, conf.json, dataset_files/classes.txt)" optional="false" />
+    <param name="model_archive" type="data" format="tgz,tar" label="planktonclas-format model archive (.tar.gz with ckpts/final_model.h5, conf/conf.json, dataset_files/classes.txt)" optional="false" />
     <param name="images_archive" type="data" format="zip" label="Image archive (.zip), images referenced by relative path in the split file" optional="false" />
     <param name="split_file" type="data" format="txt" label="Split file with one 'image_path label' per line; image_path is relative to the image archive root" optional="false" />
     <param name="top_K" type="integer" value="0" label="Top-K predictions to keep in full_probs (0 = full softmax = num_classes; matches FIESTA-bio canonical NPZ schema)" optional="false" />
