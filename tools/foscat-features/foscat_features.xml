@@ -16,6 +16,8 @@ PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/foscat-fea
     <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
     <environment_variable name="GALAXY_TOOL_DIR">$__tool_directory__</environment_variable>
     <environment_variable name="MPLBACKEND">Agg</environment_variable>
+    <environment_variable name="OMP_NUM_THREADS">1</environment_variable>
+    <environment_variable name="KMP_DUPLICATE_LIB_OK">TRUE</environment_variable>
   </environment_variables>
   <configfiles>
     <inputs name="inputs" filename="inputs.json" data_style="paths" />
