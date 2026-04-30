@@ -64,7 +64,7 @@ print(f"Images root: {images_root}")
 # ## 2. Parse split file
 
 # %%
-split_paths_, split_labels_ = [], []
+split_paths_, split_rel_paths_, split_labels_ = [], [], []
 missing = 0
 with open(split_file) as f:
     for line in f:
@@ -80,7 +80,13 @@ with open(split_file) as f:
             else:
                 missing += 1
                 continue
+        # split_paths_ holds the absolute path (used to OPEN the image
+        # in extract()). split_rel_paths_ holds the path relative to the
+        # image archive root (saved in the output NPZ for downstream
+        # alignment with other tools' outputs — the absolute paths
+        # differ between Galaxy job tmp dirs).
         split_paths_.append(str(full))
+        split_rel_paths_.append(rel)
         split_labels_.append(int(lab))
 split_labels = np.array(split_labels_, dtype=np.int64)
 print(f"Resolved {len(split_paths_)} images from split file ({missing} missing)")
@@ -146,7 +152,11 @@ def extract(paths):
 
 X, keep = extract(split_paths_)
 y = split_labels[keep] if len(keep) > 0 else split_labels
-kept_paths = np.array([split_paths_[i] for i in keep])
+# Save RELATIVE paths (relative to the image archive root) so downstream
+# tools can align outputs across separate Galaxy jobs (each job extracts
+# the archive into its own tmp directory, so absolute paths would never
+# match across foscat-features and planktonclas-inference).
+kept_paths = np.array([split_rel_paths_[i] for i in keep])
 
 print(f"\nFeature matrix: X {X.shape}, y {y.shape}, paths {kept_paths.shape}")
 
