@@ -110,7 +110,7 @@ ckpt = model_dir / "ckpts" / "final_model.h5"
 model = load_model(str(ckpt), custom_objects=utils.get_custom_objects())
 print(f"Model loaded: input {model.input_shape}, output {model.output_shape}")
 
-split_paths_, split_labels_ = [], []
+split_paths_, split_rel_paths_, split_labels_ = [], [], []
 missing = 0
 with open(split_file) as f:
     for line in f:
@@ -127,7 +127,14 @@ with open(split_file) as f:
             else:
                 missing += 1
                 continue
+        # split_paths_ holds absolute paths (passed to planktonclas's
+        # predict() to load images). split_rel_paths_ holds the path
+        # relative to the image archive root, saved in the output NPZ
+        # so downstream tools (e.g. scattering-stacking) can align our
+        # softmax outputs with feature outputs from a sibling Galaxy
+        # tool that extracted the same archive into a DIFFERENT tmp dir.
         split_paths_.append(str(full))
+        split_rel_paths_.append(rel)
         split_labels_.append(int(lab))
 split_labels = np.array(split_labels_, dtype=np.int64)
 print(
@@ -169,7 +176,7 @@ np.savez_compressed(
     y_true=split_labels,
     y_pred=y_pred_top1,
     full_probs=full_probs.astype(np.float16),
-    paths=np.array(split_paths_),
+    paths=np.array(split_rel_paths_),
 )
 print(
     f"Saved {predictions_npz} — shapes: full_probs {full_probs.shape}, paths {N}"
