@@ -1,16 +1,17 @@
-<tool id="foscat_features" name="foscat-features" version="0.1.0+galaxy0" profile="24.0">
+<tool id="foscat_features" name="foscat-features" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="24.0">
   <description>Multi-scale scattering feature extraction from RGB images via FOSCAT</description>
-  <requirements>
-    <requirement type="package" version="3.11">python</requirement>
-    <requirement type="package" version="24.0">pip</requirement>
-    <requirement type="package" version="2.2.6">numpy</requirement>
-    <requirement type="package" version="11.2.1">pillow</requirement>
-  </requirements>
+  <macros>
+    <import>macros.xml</import>
+  </macros>
+  <edam_topics>
+    <edam_topic>topic_3382</edam_topic>
+  </edam_topics>
+  <edam_operations>
+    <edam_operation>operation_3443</edam_operation>
+  </edam_operations>
+  <expand macro="requirements"/>
   <command detect_errors="exit_code"><![CDATA[
-mkdir -p tool_pkgs &&
-pip install --quiet --target=tool_pkgs --index-url https://download.pytorch.org/whl/cpu torch &&
-pip install --quiet --target=tool_pkgs 'foscat>=2026.4.1' &&
-PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/foscat-features.py'
+python '$__tool_directory__/foscat-features.py'
   ]]></command>
   <environment_variables>
     <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
@@ -102,13 +103,5 @@ problem can use this feature representation. Dataset download,
 split-file generation, and class-balanced sub-sampling all live at the
 workflow level (WorkflowHub), not in this tool.
 </help>
-  <citations>
-    <citation type="doi">10.1051/0004-6361/202244566</citation>
-    <citation type="bibtex">@software{foscat,
-            author = {Delouis, Jean-Marc and Fouilloux, Anne and contributors},
-            title = {{FOSCAT}: scattering transform on 2D and HEALPix data},
-            url = {https://github.com/jmdelouis/FOSCAT},
-            year = {2026}
-        }</citation>
-  </citations>
+  <expand macro="citations"/>
 </tool>
