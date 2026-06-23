@@ -3,12 +3,12 @@
   <macros>
     <import>macros.xml</import>
   </macros>
-  <edam_operations>
-    <edam_operation>operation_3443</edam_operation>
-  </edam_operations>
   <edam_topics>
     <edam_topic>topic_3382</edam_topic>
   </edam_topics>
+  <edam_operations>
+    <edam_operation>operation_3443</edam_operation>
+  </edam_operations>
   <expand macro="requirements"/>
   <command detect_errors="exit_code"><![CDATA[
 python '$__tool_directory__/foscat-synthesis.py'
