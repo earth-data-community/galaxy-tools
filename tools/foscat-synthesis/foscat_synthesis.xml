@@ -1,9 +1,15 @@
-<tool id="foscat_synthesis" name="foscat-synthesis" version="0.1.0+galaxy0" profile="24.0">
+<tool id="foscat_synthesis" name="foscat-synthesis" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="24.0">
   <description>Multi-scale scattering-transform synthesis (and gap-filling) of HEALPix maps and 2D images via FOSCAT</description>
-  <requirements>
-    <requirement type="package" version="2026.4.1">foscat</requirement>
-    <requirement type="package" version="2.12.1">pytorch-cpu</requirement>
-  </requirements>
+  <macros>
+    <import>macros.xml</import>
+  </macros>
+  <edam_operations>
+    <edam_operation>operation_3443</edam_operation>
+  </edam_operations>
+  <edam_topics>
+    <edam_topic>topic_3382</edam_topic>
+  </edam_topics>
+  <expand macro="requirements"/>
   <command detect_errors="exit_code"><![CDATA[
 python '$__tool_directory__/foscat-synthesis.py'
   ]]></command>
@@ -180,13 +186,5 @@ The chain-specific parts (data ingest, preprocessing, masking choices,
 plot generation) live at the workflow level on WorkflowHub; this tool
 provides only the generic FOSCAT optimization step.
 </help>
-  <citations>
-    <citation type="doi">10.1051/0004-6361/202244566</citation>
-    <citation type="bibtex">@software{foscat,
-            author = {Delouis, Jean-Marc and Fouilloux, Anne and contributors},
-            title = {{FOSCAT}: scattering transform on 2D and HEALPix data},
-            url = {https://github.com/jmdelouis/FOSCAT},
-            year = {2026}
-        }</citation>
-  </citations>
+  <expand macro="citations"/>
 </tool>
