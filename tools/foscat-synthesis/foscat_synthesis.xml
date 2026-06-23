@@ -1,15 +1,12 @@
 <tool id="foscat_synthesis" name="foscat-synthesis" version="0.1.0+galaxy0" profile="24.0">
   <description>Multi-scale scattering-transform synthesis (and gap-filling) of HEALPix maps and 2D images via FOSCAT</description>
   <requirements>
-    <requirement type="package" version="3.11">python</requirement>
-    <requirement type="package" version="24.0">pip</requirement>
-    <requirement type="package" version="2.2.6">numpy</requirement>
+    <requirement type="package" version="2026.4.1">foscat</requirement>
+    <requirement type="package" version="2.12.1">pytorch-cpu</requirement>
+    <requirement type="package">numpy</requirement>
   </requirements>
   <command detect_errors="exit_code"><![CDATA[
-mkdir -p tool_pkgs &&
-pip install --quiet --target=tool_pkgs --index-url https://download.pytorch.org/whl/cpu torch &&
-pip install --quiet --target=tool_pkgs 'foscat>=2026.4.1' &&
-PYTHONPATH="\$PWD/tool_pkgs:\$PYTHONPATH" python '$__tool_directory__/foscat-synthesis.py'
+python '$__tool_directory__/foscat-synthesis.py'
   ]]></command>
   <environment_variables>
     <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
