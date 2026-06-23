@@ -3,7 +3,6 @@
   <requirements>
     <requirement type="package" version="2026.4.1">foscat</requirement>
     <requirement type="package" version="2.12.1">pytorch-cpu</requirement>
-    <requirement type="package">numpy</requirement>
   </requirements>
   <command detect_errors="exit_code"><![CDATA[
 python '$__tool_directory__/foscat-synthesis.py'
