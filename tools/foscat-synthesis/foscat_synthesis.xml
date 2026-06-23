@@ -7,15 +7,14 @@
     <edam_topic>topic_3382</edam_topic>
   </edam_topics>
   <edam_operations>
-    <edam_operation>operation_3443</edam_operation>
+    <edam_operation>operation_2426</edam_operation>
+    <edam_operation>operation_3557</edam_operation>
   </edam_operations>
   <expand macro="requirements"/>
   <command detect_errors="exit_code"><![CDATA[
 python '$__tool_directory__/foscat-synthesis.py'
   ]]></command>
   <environment_variables>
-    <environment_variable name="BASEDIR">$__tool_directory__</environment_variable>
-    <environment_variable name="GALAXY_TOOL_DIR">$__tool_directory__</environment_variable>
     <environment_variable name="MPLBACKEND">Agg</environment_variable>
     <environment_variable name="KMP_DUPLICATE_LIB_OK">TRUE</environment_variable>
     <environment_variable name="OMP_NUM_THREADS">1</environment_variable>
@@ -28,14 +27,14 @@ python '$__tool_directory__/foscat-synthesis.py'
       <option value="healpix" selected="true">HEALPix (1D array of length 12*nside^2)</option>
       <option value="image_2d">2D rectangular image</option>
     </param>
-    <param name="target_map" type="data" format="data" label="Target reference map (.npy). HEALPix: 1D (n_pixels,) or (1, n_pixels). 2D image: (H, W) or (1, H, W)." optional="false" />
-    <param name="starting_map" type="data" format="data" label="Optional starting map (.npy, same shape as target). Leave unset to generate random noise scaled to the target's mean/std." optional="true" />
-    <param name="eval_mask" type="data" format="data" label="Optional evaluation mask (.npy, same shape as target). Restricts where the scattering statistics are computed (e.g. ocean-only). Leave unset to use all pixels." optional="true" />
-    <param name="update_mask" type="data" format="data" label="Optional update mask (.npy, same shape as target). Restricts which pixels the synthesis updates (e.g. cloudy regions only — for gap-filling). Leave unset to update all pixels." optional="true" />
-    <param name="norient" type="integer" value="4" label="Number of orientations for the scattering transform (FOSCAT NORIENT)" optional="false" />
-    <param name="kernelsz" type="integer" value="3" label="Kernel size for the scattering transform (FOSCAT KERNELSZ)" optional="false" />
-    <param name="nsteps" type="integer" value="300" label="Number of synthesis iterations (NUM_EPOCHS)" optional="false" />
-    <param name="seed" type="integer" value="1234" label="Random seed for the starting noise (used only when starting_map is empty)" optional="false" />
+    <param name="target_map" type="data" format="npy" label="Target reference map (.npy). HEALPix: 1D (n_pixels,) or (1, n_pixels). 2D image: (H, W) or (1, H, W)." optional="false" />
+    <param name="starting_map" type="data" format="npy" label="Optional starting map (.npy, same shape as target). Leave unset to generate random noise scaled to the target's mean/std." optional="true" />
+    <param name="eval_mask" type="data" format="npy" label="Optional evaluation mask (.npy, same shape as target). Restricts where the scattering statistics are computed (e.g. ocean-only). Leave unset to use all pixels." optional="true" />
+    <param name="update_mask" type="data" format="npy" label="Optional update mask (.npy, same shape as target). Restricts which pixels the synthesis updates (e.g. cloudy regions only — for gap-filling). Leave unset to update all pixels." optional="true" />
+    <param name="norient" type="integer" value="4" min="1" max="8" label="Number of orientations for the scattering transform (FOSCAT NORIENT)" optional="false" />
+    <param name="kernelsz" type="integer" value="3" min="3" max="9" label="Kernel size for the scattering transform (FOSCAT KERNELSZ)" optional="false" />
+    <param name="nsteps" type="integer" value="300" min="1" max="100000" label="Number of synthesis iterations (NUM_EPOCHS)" optional="false" />
+    <param name="seed" type="integer" value="1234" min="0" max="2147483647" label="Random seed for the starting noise (used only when starting_map is empty)" optional="false" />
     <conditional name="advanced">
       <param name="show" type="select" label="Show advanced options">
         <option value="no" selected="true">No — use defaults</option>
@@ -93,98 +92,43 @@ python '$__tool_directory__/foscat-synthesis.py'
       </assert_stdout>
     </test>
   </tests>
-  <help>foscat-synthesis
-================
+  <help format="markdown"><![CDATA[
+# foscat-synthesis
 
-Synthesize a map (or fill gaps in a map) so that its multi-scale
+Synthesise a map (or fill gaps in a map) so that its multi-scale
 scattering-transform statistics match a target reference, using
-`FOSCAT &lt;https://github.com/jmdelouis/FOSCAT&gt;`__
-(Delouis et al.&#160;2022). Works on both **HEALPix** (1D arrays of length
-``12 * nside**2``) and **2D images** (rectangular grids, any
-``(H, W)``) — controlled by the ``domain`` parameter.
+[FOSCAT](https://github.com/jmdelouis/FOSCAT) (Delouis et al. 2022). It works
+on both **HEALPix** maps (1D arrays of length `12 * nside**2`) and **2D images**
+(any `(H, W)` grid), selected with the `domain` parameter.
 
-The same algorithm covers two distinct use cases, controlled by which
-optional masks are supplied:
+The same algorithm covers two use cases, controlled by which optional masks are
+supplied:
 
-- **Pure synthesis** &#8212; generate a new realization with the same
-  scattering statistics as a target map (e.g.&#160;a cosmological
-  large-scale structure map, an astrophysical foreground, or a
-  natural-image texture). Provide only the target; the tool starts
-  from random noise scaled to the target's mean/std.
-- **Gap-filling** &#8212; replace masked regions of an observed map with
-  values whose scattering statistics match a gap-free reference (e.g.
-  cloudy SST pixels filled to match an L4 product, or missing image
-  patches inpainted to match the surrounding texture). Supply the
-  reference as ``target_map``, the gappy-observed-plus-baseline as
-  ``starting_map``, an evaluation mask (where reference statistics are
-  computed), and an update mask (which pixels the synthesis is allowed
-  to modify).
+- **Pure synthesis** — generate a new realisation with the same scattering
+  statistics as a target (e.g. a cosmological large-scale-structure map or a
+  natural-image texture). Provide only the target; synthesis starts from random
+  noise scaled to the target's mean/std.
+- **Gap-filling** — replace masked regions of an observed map with values whose
+  scattering statistics match a gap-free reference (e.g. cloudy SST pixels
+  filled to match an L4 product). Supply the reference as `target_map`, the
+  observed map as `starting_map`, an **evaluation mask** (where the reference
+  statistics are computed) and an **update mask** (which pixels may change).
 
-Inputs
-------
+## Inputs
 
-- **Target map** (``.npy``):
+- **Target map** (`npy`) — HEALPix: 1D `(n_pixels,)` or `(1, n_pixels)`;
+  2D image: `(H, W)` or `(1, H, W)`.
+- **Starting map** (`npy`, optional) — same shape as the target.
+- **Evaluation mask** (`npy`, optional) — restricts where statistics are
+  computed.
+- **Update mask** (`npy`, optional) — restricts which pixels the synthesis
+  updates (FOSCAT `grd_mask`); use for gap-filling.
 
-  - HEALPix domain: 1D array of length ``12 * nside**2``, or 2D
-    ``(1, n_pixels)``.
-  - 2D-image domain: 2D ``(H, W)`` array, or 3D ``(1, H, W)``.
+## Outputs
 
-- **Starting map** (``.npy``, optional): same shape as target. If
-  absent, the tool generates random Gaussian noise scaled to the
-  target's mean and std.
-- **Evaluation mask** (``.npy``, optional): same shape as target.
-  Restricts where the scattering statistics are computed
-  (e.g.&#160;ocean-only). If absent, all pixels contribute.
-- **Update mask** (``.npy``, optional): same shape as target.
-  Restricts which pixels the synthesis updates (FOSCAT's ``grd_mask``).
-  Use this for gap-filling &#8212; only the cloudy/missing pixels are
-  updated, observed pixels stay fixed.
-
-Parameters
-----------
-
-- ``domain`` &#8212; ``healpix`` (default) or ``image_2d``. Selects the
-  FOSCAT mode (``use_2D=True`` is set internally for ``image_2d``).
-- ``norient`` (default ``4``) &#8212; number of orientations for the
-  scattering transform.
-- ``kernelsz`` (default ``3``) &#8212; kernel size.
-- ``nsteps`` (default ``300``) &#8212; synthesis iterations
-  (``NUM_EPOCHS``).
-- ``seed`` (default ``1234``) &#8212; seed for the random starting
-  noise.
-
-Advanced options
-----------------
-
-A small advanced panel exposes solver knobs that experienced users may
-want to tune. Defaults match FOSCAT's recommended settings.
-
-- ``do_lbfgs`` (default true) &#8212; use the L-BFGS optimizer.
-  Uncheck to use FOSCAT's first-order fallback.
-- ``eval_frequency`` (default 0 &#8594; ``nsteps/10``) &#8212; how
-  often, in iterations, the loss is printed during synthesis.
-
-Outputs
--------
-
-- **Synthesized map** (``.npy``): same shape as the target (1D for
-  HEALPix, 2D for images).
-- **Results JSON**: tool config, validation statistics (target/synth
-  mean and std), and the scattering-coefficient error before and after
-  synthesis with an "improvement %" summary.
-
-Origin
-------
-
-Wraps the FOSCAT synthesis pattern shared across the FIESTA-OSCARS
-chains
-`fiesta-scattering-astro &lt;https://github.com/annefou/fiesta-scattering-astro&gt;`__,
-`fiesta-scattering-sst &lt;https://github.com/annefou/fiesta-scattering-sst&gt;`__,
-and
-`fiesta-scattering-sst-healpix-geo &lt;https://github.com/annefou/fiesta-scattering-sst-healpix-geo&gt;`__.
-The chain-specific parts (data ingest, preprocessing, masking choices,
-plot generation) live at the workflow level on WorkflowHub; this tool
-provides only the generic FOSCAT optimization step.
-</help>
+- **Synthesised map** (`npy`) — same shape as the target.
+- **Results** (JSON) — configuration plus the scattering-coefficient error
+  before/after synthesis and an improvement summary.
+]]></help>
   <expand macro="citations"/>
 </tool>
