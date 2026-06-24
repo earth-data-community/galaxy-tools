@@ -297,42 +297,58 @@ with open(results_json, "w") as f:
 
 print(f"Saved {synthesis_npy} and {results_json}")
 
-# Galaxy tool outputs — paths to files written above.
-synthesis = synthesis_npy
-results_out = results_json
+# %% [markdown]
+# ## 8. Viewable preview (TIFF)
+#
+# The npy output above is the canonical, lossless data. Here we additionally
+# render a quick-look TIFF so the result can be viewed directly in Galaxy
+# (Galaxy has a TIFF viewer). A HEALPix map is a 1D sphere pixelisation and is
+# not itself a 2D raster, so it is rendered as a Mollweide projection; a 2D
+# image is shown as-is. This preview is for display only.
 
-# output gathering
+# %%
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+preview_tiff = "synthesis_preview.tiff"
+_fig = plt.figure(figsize=(8, 5))
+if domain == "healpix":
+    import healpy as hp
+
+    hp.mollview(
+        omap_np.reshape(-1),
+        fig=_fig.number,
+        cmap="viridis",
+        title="foscat-synthesis (HEALPix, Mollweide view)",
+        cbar=True,
+    )
+else:
+    _ax = _fig.add_subplot(111)
+    _im = _ax.imshow(
+        omap_np.reshape(omap_np.shape[-2], omap_np.shape[-1]), cmap="viridis"
+    )
+    _ax.set_title("foscat-synthesis (2D image)")
+    _ax.set_xticks([])
+    _ax.set_yticks([])
+    _fig.colorbar(_im, ax=_ax, fraction=0.046, pad=0.04)
+_fig.savefig(preview_tiff, format="tiff", dpi=100, bbox_inches="tight")
+plt.close(_fig)
+print(f"Saved {preview_tiff}")
+
+# Galaxy tool outputs — files written above, with their declared datatypes.
 _galaxy_meta_data = {}
-_simple_outs = []
-_simple_outs.append(
-    (
-        "out_foscat_synthesis_synthesis",
-        "synthesis_galaxy.output",
-        synthesis,
-    )
-)
-_simple_outs.append(
-    (
-        "out_foscat_synthesis_results",
-        "results_galaxy.output",
-        results_out,
-    )
-)
-_numpy_available = True
+_simple_outs = [
+    ("out_foscat_synthesis_synthesis", "synthesis_galaxy.output", synthesis_npy, "npy"),
+    ("out_foscat_synthesis_preview", "preview_galaxy.output", preview_tiff, "tiff"),
+    ("out_foscat_synthesis_results", "results_galaxy.output", results_json, "json"),
+]
 
-for _outn, _outfn, _outv in _simple_outs:
+for _outn, _outfn, _outv, _ext in _simple_outs:
     _galaxy_outfile_name = os.path.join(_galaxy_wd, _outfn)
-    if isinstance(_outv, str) and os.path.isfile(_outv):
-        shutil.move(_outv, _galaxy_outfile_name)
-        _galaxy_meta_data[_outn] = {"ext": "_sniff_"}
-    elif _numpy_available and isinstance(_outv, np.ndarray):
-        with open(_galaxy_outfile_name, "wb") as fd:
-            np.savez(fd, _outv)
-        _galaxy_meta_data[_outn] = {"ext": "npz"}
-    else:
-        with open(_galaxy_outfile_name, "w") as fd:
-            json.dump(_outv, fd)
-        _galaxy_meta_data[_outn] = {"ext": "expression.json"}
+    shutil.move(_outv, _galaxy_outfile_name)
+    _galaxy_meta_data[_outn] = {"ext": _ext}
 
 with open(os.path.join(_galaxy_wd, "galaxy.json"), "w") as fd:
     json.dump(_galaxy_meta_data, fd)

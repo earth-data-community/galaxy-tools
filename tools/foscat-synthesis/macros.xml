@@ -5,6 +5,7 @@
         <requirements>
             <requirement type="package" version="@TOOL_VERSION@">foscat</requirement>
             <requirement type="package" version="2.12.1">pytorch-cpu</requirement>
+            <requirement type="package" version="11.2.1">pillow</requirement>
         </requirements>
     </xml>
     <xml name="citations">

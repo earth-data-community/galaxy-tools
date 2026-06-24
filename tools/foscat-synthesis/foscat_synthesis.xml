@@ -51,11 +51,12 @@ python '$__tool_directory__/foscat-synthesis.py'
     </conditional>
   </inputs>
   <outputs>
-    <data label="${tool.name} -&gt; synthesis (${domain})" name="out_foscat_synthesis_synthesis" format="auto" from_work_dir="synthesis_galaxy.output" />
-    <data label="${tool.name} -&gt; results (${domain})" name="out_foscat_synthesis_results" format="auto" from_work_dir="results_galaxy.output" />
+    <data label="${tool.name} -&gt; synthesis (${domain})" name="out_foscat_synthesis_synthesis" format="npy" from_work_dir="synthesis_galaxy.output" />
+    <data label="${tool.name} -&gt; preview (${domain})" name="out_foscat_synthesis_preview" format="tiff" from_work_dir="preview_galaxy.output" />
+    <data label="${tool.name} -&gt; results (${domain})" name="out_foscat_synthesis_results" format="json" from_work_dir="results_galaxy.output" />
   </outputs>
   <tests>
-    <test expect_num_outputs="2">
+    <test expect_num_outputs="3">
       <param name="domain" value="healpix" />
       <param name="target_map" value="target.npy" />
       <param name="starting_map" value="starting.npy" />
@@ -68,11 +69,16 @@ python '$__tool_directory__/foscat-synthesis.py'
       <conditional name="advanced">
         <param name="show" value="no" />
       </conditional>
+      <output name="out_foscat_synthesis_preview" ftype="tiff">
+        <assert_contents>
+          <has_size min="1000" />
+        </assert_contents>
+      </output>
       <assert_stdout>
         <has_text text="*** Job finished successfully ***" />
       </assert_stdout>
     </test>
-    <test expect_num_outputs="2">
+    <test expect_num_outputs="3">
       <param name="domain" value="image_2d" />
       <param name="target_map" value="target_2d.npy" />
       <param name="starting_map" value="starting_2d.npy" />
@@ -87,6 +93,11 @@ python '$__tool_directory__/foscat-synthesis.py'
         <param name="do_lbfgs" value="true" />
         <param name="eval_frequency" value="5" />
       </conditional>
+      <output name="out_foscat_synthesis_preview" ftype="tiff">
+        <assert_contents>
+          <has_size min="1000" />
+        </assert_contents>
+      </output>
       <assert_stdout>
         <has_text text="*** Job finished successfully ***" />
       </assert_stdout>
@@ -126,7 +137,13 @@ supplied:
 
 ## Outputs
 
-- **Synthesised map** (`npy`) — same shape as the target.
+- **Synthesised map** (`npy`) — the exact result array, same shape as the
+  target. This is the lossless, cross-domain data product (HEALPix maps and 2D
+  rasters are both plain NumPy arrays); load it with `numpy.load`.
+- **Preview** (`tiff`) — a viewable quick-look rendering of the synthesised map,
+  so the result can be inspected directly in Galaxy. HEALPix maps are shown as a
+  Mollweide projection (`healpy.mollview`); 2D images are shown as-is. This is a
+  rendering for display only — use the `npy` output for any further analysis.
 - **Results** (JSON) — configuration plus the scattering-coefficient error
   before/after synthesis and an improvement summary.
 ]]></help>
