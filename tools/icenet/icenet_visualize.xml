@@ -1,0 +1,55 @@
+<tool id="visualize_icenet_forecast" name="Visualize Icenet Forecast" version="0.1.0+galaxy0" profile="21.05">
+    <description>for visualizing and analyzing the Icenet forecast</description>
+        <requirements>
+            <requirement type="package" version= "3.10.9">python</requirement>
+            <requirement type="package" version="2023.1.0">xarray</requirement>
+            <requirement type="package" version="1.24.2">numpy</requirement>
+            <requirement type="package" version="1.5.3">pandas</requirement>
+            <requirement type="package" version="1.10.0">scipy</requirement>
+            <requirement type="package" version="3.4.0">iris</requirement>
+            <requirement type="package" version="1.6.0">netcdf4</requirement>
+            <requirement type="package" version="2.15.0">imageio</requirement>
+            <requirement type="package" version="3.6.3">matplotlib</requirement>
+            <requirement type="package" version="4.64.1">tqdm</requirement>
+            <requirement type="package" version="0.5.1">cdsapi</requirement>
+            <requirement type="package" version="2.10">tensorflow</requirement>
+            <requirement type="package" version="0.14.3" >panel</requirement>
+        </requirements>
+        <command detect_errors="exit_code"><![CDATA[
+            mkdir -p "results/forecast_results" &&
+            mkdir 'data' && 
+            cp -r '$__tool_directory__/masks' "data/" &&
+            python3 '$__tool_directory__/visualize.py' --siconca '$siconca_file' --forecast '$forecast_file' --forecast_start '$forecast_start' --forecast_end '$forecast_end' --old_results '$__tool_directory__/2021_07_01_183913_forecast_results.csv'
+        ]]></command>
+        <inputs>
+            <param name="forecast_start" type="text" label="Forecast start date" help="date must have the format yyyy-mm-dd"/>
+            <param name="forecast_end" type="text"  label="Forecast end date" help="date must have the format yyyy-mm-dd"/>
+            <param name="siconca_file" type="data"  label="Monthly averaged OSI-SAF sea ice concentration data preprocessed with the Preprocess Icenet Data Tool" format="netcdf" help="all forecast months are needed to visualize the binary accuracy of the Icenet Model"/>
+            <param name="forecast_file" type="data" label="Sea ice concentration forecast generated with the Icenet Forecast Tool" format="netcdf" help="the forecast months in this file must match the forecast start and end date and the forecast months in the sea ice concentration file"/>
+        </inputs>
+        <outputs>
+            <data name="forecast_visualization" format="html" from_work_dir="forecast_visualization.html"/>
+        </outputs>
+    <tests>
+    <!--
+        <test>
+            <param name="siconca_file" value="siconca_EASE.nc"/>
+            <param name="forecast_file" value="icenet_forecasts.nc"/>
+            <param name="forecast_start" value="2020-01-01"/>
+            <param name="forecast_end" value="2020-12-01"/>
+            <output name="forecast_visualization">
+            <assert_contents>
+               <has_size value="9754721" delta="100"/>
+            </assert_contents>
+            </output>
+        </test>
+        -->
+    </tests>
+    <help><![CDATA[
+            This tool is a wrapper to plot an interactive figure which shows the observed sea ice concentration ground truth data and the predicted sea ice concentration for each month from "Forecast start date" till "Forecast end date" with a lead time up to 4 months.
+    ]]></help>
+    <citations>
+       <citation type="doi">10.5281/zenodo.5176573
+       </citation>
+    </citations>
+</tool>

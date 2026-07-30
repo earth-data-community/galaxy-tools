@@ -1,0 +1,10 @@
+name: preprocess
+owner: climate
+description: Preprocess Icenet Data (preprocess)
+homepage_url: https://zenodo.org/record/5176573
+long_description: |
+    This tool is a wrapper to preprocess icenet data (netcdf files).
+remote_repository_url: https://github.com/NordicESMhub/galaxy-tools/tree/master/tools/preprocess
+type: unrestricted
+categories:
+- Climate Analysis

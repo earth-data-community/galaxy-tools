@@ -1,0 +1,59 @@
+<tool id="create_API_requests_for_icenet_data" name="create API requests for Icenet Data" version="0.1.0+galaxy0" profile="21.05">
+    <description>for creating request text files for downloading Icenet Data with the Copernicus Climate Data Store Tool</description>
+        <requirements>
+            <requirement type="package" version= "3.10.9">python</requirement>
+            <requirement type="package" version="2023.1.0">xarray</requirement>
+            <requirement type="package" version="1.5.3">pandas</requirement>
+        </requirements>
+        <command detect_errors="exit_code"><![CDATA[
+            python3 '$__tool_directory__/createRequests.py' --var "tas" "tos" "rsds" "rsus" "psl" --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --forecast_start '$forecast_start' --forecast_end '$forecast_end'           &&
+            python3 '$__tool_directory__/createRequests.py' --var "ta500" --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --forecast_start '$forecast_start' --forecast_end '$forecast_end'           &&
+            python3 '$__tool_directory__/createRequests.py' --var "zg500" --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --forecast_start '$forecast_start' --forecast_end '$forecast_end'           &&
+            python3 '$__tool_directory__/createRequests.py' --var "zg250" --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --forecast_start '$forecast_start' --forecast_end '$forecast_end'           &&
+            python3 '$__tool_directory__/createRequests.py' --var "ua10" --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --forecast_start '$forecast_start' --forecast_end '$forecast_end'           &&
+            python3 '$__tool_directory__/createRequests.py' --var "uas" "vas" --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --forecast_start '$forecast_start' --forecast_end '$forecast_end'
+        ]]></command>
+        <inputs>
+            <param name="forecast_start" type="text" label="Forecast start date" help="date must have the format yyyy-mm-dd"/>
+            <param name="forecast_end" type="text"  label="Forecast end date" help="date must have the format yyyy-mm-dd"/>
+        </inputs>
+        <outputs>
+             <data name="multiple_requests_tas_request" format="txt" from_work_dir="tas_request.txt"/>
+             <data name="ta500_request" format="txt" from_work_dir="ta500_request.txt"/>
+             <data name="zg500_request" format="txt" from_work_dir="zg500_request.txt"/>
+             <data name="zg250_request" format="txt" from_work_dir="zg250_request.txt"/>
+             <data name="ua10_request" format="txt" from_work_dir="ua10_request.txt"/>
+             <data name="multiple_requests_uas_request" format="txt" from_work_dir="uas_request.txt"/>
+    </outputs>
+    <tests>
+       <test>
+          <param name="forecast_start" value="2019-01-01" />
+          <param name="forecast_end" value="2019-05-01" />
+          <output name="multiple_requests_tas_request">
+             <assert_contents>
+                <has_text text="2m_temperature"/>
+                <has_text text="sea_surface_temperature"/>
+                <has_text text="surface_solar_radiation_downwards"/>
+                <has_text text="surface_net_solar_radiation"/>
+                <has_text text="mean_sea_level_pressure"/>
+             </assert_contents>
+          </output>
+          <output name="multiple_requests_uas_request">
+             <assert_contents>
+                <has_text text="10m_u_component_of_wind"/>
+                <has_text text="10m_v_component_of_wind"/>
+             </assert_contents>
+          </output>
+       </test>
+    </tests>
+        <help><![CDATA[
+            This tool is a wrapper to concatenate yearly sea ice concentration netcdf files. These files are provided in the Data Library under Earth System Community Modeling/sea-ice and were downloaded from the following sites:
+            - OSI-450 (1979-2016): https://thredds.met.no/thredds/dodsC/osisaf/met.no/reprocessed/ice/conc_v2p0_nh_agg.html
+            - OSI-430-b (2016-present): https://thredds.met.no/thredds/dodsC/osisaf/met.no/reprocessed/ice/conc_crb_nh_agg.html.
+            The tool generates one netcdf file with all of the yearly sea ice concentration data from 1979-present which serves as an input for the Preprocess Icenet Data Tool.
+    ]]></help>
+    <citations>
+       <citation type="doi">10.5281/zenodo.5176573
+       </citation>
+    </citations>
+</tool>
