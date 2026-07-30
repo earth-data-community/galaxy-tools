@@ -1,0 +1,25 @@
+categories:
+- Machine Learning
+- Imaging
+- Statistics
+description: Stack a deep model's softmax with multi-scale scattering features via a class-weighted logistic-regression meta-classifier
+homepage_url: https://github.com/annefou/fiesta-scattering-bio
+long_description: |
+  Combines a deep classifier's per-class softmax probabilities (e.g. a CNN
+  output) with multi-scale scattering features through a class-weighted
+  logistic-regression meta-classifier. The stacking is trained on a
+  validation split and evaluated on a held-out test split, reporting
+  top-1, top-5 and mean rare-class recall for the deep model alone, the
+  scattering-LR alone, a 50/50 probability ensemble, the stacked
+  meta-classifier, and a hard-switch oracle ceiling. Originally developed
+  for the FIESTA-OSCARS plankton-classification chain
+  (fiesta-scattering-bio), which extends the EfficientNetV2-B0
+  phytoplankton classifier of Decrop et al. 2025 with multi-scale
+  scattering features computed via FOSCAT (Delouis et al. 2022). The tool
+  itself is dataset-agnostic — any classification problem with paired
+  deep-model softmax probabilities and an independent feature
+  representation can be stacked this way.
+name: scattering_stacking
+owner: annefou
+remote_repository_url: https://github.com/NordicESMhub/galaxy-tools/tree/master/tools/scattering-stacking
+type: unrestricted
