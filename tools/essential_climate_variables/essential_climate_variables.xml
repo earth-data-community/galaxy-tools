@@ -1,10 +1,26 @@
-<tool id="cds_essential_variability" name="Copernicus Essential Climate Variables" version="0.2.0" profile="20.05">
+<tool id="cds_essential_variability" name="Copernicus Essential Climate Variables" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>for assessing climate variability</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.2.0</token> 
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
+    <edam_topics>
+      <edam_topic>topic_3855</edam_topic>
+      <edam_topic>topic_3318</edam_topic>
+    </edam_topics>
+    <edam_operations>
+      <edam_operation>operation_2422</edam_operation>
+      <edam_operation>operation_3357</edam_operation>
+      <edam_operation>operation_0335</edam_operation>
+    </edam_operations>
     <requirements>
         <requirement type="package" version="3">python</requirement>
         <requirement type="package" version="0.5.1">cdsapi</requirement>
         <requirement type="package" version="1.9.10">cdo</requirement>
     </requirements>
+	<required_files>
+        <include path="ecv_retrieve.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
        export HOME=`pwd` &&
        #set $cdsapirc_file = os.environ.get('COPERNICUS_CDSAPIRC_KEY_FILE', '')
@@ -20,14 +36,14 @@
             --month '$month'
         #if str($product_type.product) == 'monthly_mean'
             --year '$product_type.year'
-            --time_aggregation '1_month_mean'
+            --time_aggregation 'product_type.1_month_mean'
         #else if str($product_type.product) == 'anomaly'
             --climate_reference_period $product_type.climate_reference_period
             --time_aggregation '$product_type.selector'
             --year '$product_type.year'
         #else
             --climate_reference_period $product_type.climate_reference_period
-           --time_aggregation '1_month_mean'
+           --time_aggregation 'product_type.1_month_mean'
         #end if
            --product_type '$product_type.product'
            --format 'tgz' --output 'tmp.tgz'
@@ -191,7 +207,9 @@
                 <param name="year" value="2018"/>
             </conditional>
             <param name="month" value="12"/>
-            <param name="resol" value="r144x72"/>
+			<section name="adv">
+	            <param name="resol" value="r144x72"/>
+			</section>
             <output name="ofilename" ftype="netcdf" file="soil_moisture.nc" compare="sim_size" delta="100"/>
         </test>
         <test>
@@ -199,10 +217,12 @@
             <conditional name="product_type">
                 <param name="product" value="anomaly"/>
                 <param name="year" value="2017"/>
-                <param name="time_aggregation" value="12_month"/>
+                <param name="selector" value="12_month_running_mean"/>
             </conditional>
             <param name="month" value="12"/>
-            <param name="resol" value="r144x72"/>
+			<section name="adv">
+	            <param name="resol" value="r144x72"/>
+			</section>
             <output name="ofilename" ftype="netcdf" file="prep_seaice.nc" compare="sim_size" delta="100"/>
         </test>
     </tests>
@@ -228,7 +248,7 @@ the corresponding anomalies.
 
 - ECV: https://gcos.wmo.int/en/essential-climate-variables
 - Copernicus Climate Data Store documentation on Essential Climate Variables:
-  https://cds.climate.copernicus.eu/cdsapp#!/dataset/ecv-for-climate-change?tab=overview
+  cds.climate.copernicus.eu/cdsapp#!/dataset/ecv-for-climate-change?tab=overview
 
   See climatedata.wmo.int/ for more information on Essential Climate Variables.
 
@@ -250,13 +270,7 @@ License:
         <citation type="doi">10.1002/qj.828</citation>
         <citation type="doi">10.1002/qj.2949</citation>
     </citations>
-    <edam_topics>
-      <edam_topic>topic_3855</edam_topic>
-      <edam_topic>topic_3318</edam_topic>
-    </edam_topics>
-    <edam_operations>
-      <edam_operation>operation_2422</edam_operation>
-      <edam_operation>operation_3357</edam_operation>
-      <edam_operation>operation_0335</edam_operation>
-    </edam_operations>
+	<creator>
+		<person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+	</creator>
 </tool>

@@ -1,5 +1,9 @@
-<tool id="c3s" name="Copernicus Climate Data Store" version="0.3.1" profile="25.1">
+<tool id="c3s" name="Copernicus Climate Data Store" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>for retrieving climate data</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.3.1</token> 
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
     <edam_topics>
         <edam_topic>topic_3855</edam_topic>
         <edam_topic>topic_3318</edam_topic>
@@ -115,4 +119,7 @@ that may be made of the Copernicus information or data it contains.
 	<citation type="bibtex">
 	@misc{C3S2024,author={Copernicus Climate Change Service},year={2024}}</citation>
     </citations>
+	<creator>
+		<person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+	</creator>
 </tool>

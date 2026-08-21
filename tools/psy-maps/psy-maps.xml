@@ -1,5 +1,9 @@
-<tool id="psy_maps" name="map plot" version="1.3.1" profile="23.0">
+<tool id="psy_maps" name="map plot" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="23.0">
     <description>gridded (lat/lon) netCDF data</description>
+    <macros>
+        <token name="@TOOL_VERSION@">1.3.1</token> 
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
     <edam_topics>
       <edam_topic>topic_3855</edam_topic>
       <edam_topic>topic_3318</edam_topic>
@@ -15,6 +19,9 @@
         <requirement type="package" version="1.4.0">psy-reg</requirement>
         <requirement type="package" version="1.6.5">netcdf4</requirement>
     </requirements>
+	<required_files>
+        <include path="psymap_simple.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
        python3 '$__tool_directory__/psymap_simple.py'
             '$ifilename' '$variable'
@@ -156,23 +163,29 @@
         <test>
             <param name="ifilename" value="TS.f2000.T31T31.control.cam.h0.0014-12.nc" />
             <param name="variable" value="TS" />
-            <param name="projection" value="" />
-            <param name="colormap" value="jet" />
+			<section name="adv">
+	            <param name="projection" value="" />
+	            <param name="colormap" value="jet" />
+			</section>
             <output name="ofilename" ftype="png" file="TS.f2000.T31T31.control.cam.h0.0014-12.png" compare="sim_size" delta="500"/>
         </test>
         <test>
             <param name="ifilename" value="TS.f2000.T31T31.control.cam.h0.0014-12.nc" />
             <param name="variable" value="TS" />
-            <param name="projection" value="ortho" />
-            <param name="colormap" value="RdBu_r" />
+			<section name="adv">
+	            <param name="projection" value="ortho" />
+	            <param name="colormap" value="RdBu_r" />
+			</section>
             <output name="ofilename" ftype="png" file="TS.f2000.T31T31.control.cam.h0.0014-12_ortho.png" compare="sim_size" delta="500"/>
         </test>
         <test>
             <param name="ifilename" value="ESACCI-OC-L3S-CHLOR_A-20220601-RESIZED-fv6.0.nc" />
             <param name="variable" value="chlor_a" />
-            <param name="projection" value="" />
-            <param name="colormap" value="jet" />
-            <param name="logscale" value="yes" />
+			<section name="adv">
+	            <param name="projection" value="" />
+	            <param name="colormap" value="jet" />
+	            <param name="logscale" value="yes" />
+			</section>
             <output name="ofilename" ftype="png" file="ESACCI-OC-L3S-CHLOR_A-20220601-RESIZED-fv6.0.png" compare="sim_size" delta="1500"/>
         </test>
     </tests>
@@ -236,4 +249,7 @@ psyplot and psy-maps can be found at https://psyplot.readthedocs.io/projects/psy
     <citations>
         <citation type="doi">10.21105/joss.00363</citation>
     </citations>
+	<creator>
+		<person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+	</creator>
 </tool>

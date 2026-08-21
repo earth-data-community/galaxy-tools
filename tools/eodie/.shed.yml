@@ -6,5 +6,5 @@ long_description: |
   EODIE is a toolkit to extract object based timeseries information from Earth Observation data. The goal of EODIE is to ease the extraction of time series information at object level. Today, vast amounts of Earth Observation data are available to the users via for example earth explorer or scihub. Often, not the whole images are needed for exploitation, but only the timeseries of a certain feature on object level. Objects may be polygons depicting agricultural field parcels, forest plots, or areas of a certain land cover type. EODIE takes the objects in as polygons in a shapefile as well as the timeframe of interest and the features (eg vegetation indices) to be extracted. The output is a per polygon timeseries of the selected features over the timeframe of interest.
 name: eodie
 owner: climate
-remote_repository_url: https://gitlab.com/eetun-tiimi/EODIE
+remote_repository_url: https://github.com/earth-data-comunity/galaxy-tools/tree/master/tools/eodie
 type: unrestricted

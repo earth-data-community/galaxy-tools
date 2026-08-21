@@ -1,5 +1,9 @@
-<tool id="shyft_longitudes" name="shift longitudes" version="0.1.0">
+<tool id="shyft_longitudes" name="shift longitudes" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>from netCDF data</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.1.0</token> 
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
     <edam_topics>
       <edam_topic>topic_3855</edam_topic>
       <edam_topic>topic_3318</edam_topic>
@@ -14,6 +18,9 @@
         <requirement type="package" version="1.4.1">netcdf4</requirement>
         <requirement type="package" version="0.10.9">xarray</requirement>
     </requirements>
+	<required_files>
+        <include path="shift_lon.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
        python3 '$__tool_directory__/shift_lon.py'
           '$ifilename'
@@ -82,6 +89,18 @@ It uses ``xarray`` python package to generate plots. More information about
 ``xarray`` can be found at http://xarray.pydata.org/en/stable/
 
     ]]></help>
-    <citations>
+        <citations>
+    	<citation type="bibtex">
+            @misc{xarray,
+              author       = {Hoyer, Stephan and Hamman, Joseph and others},
+              title        = {xarray: N-D labeled arrays and datasets in Python},
+              year         = {2023},
+              howpublished = {\url{http://xarray.pydata.org/en/stable/}},
+              note         = {Python library for working with labeled multi-dimensional arrays and datasets.}
+            }
+        </citation>
     </citations>
+	<creator>
+		<person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+	</creator>
 </tool>

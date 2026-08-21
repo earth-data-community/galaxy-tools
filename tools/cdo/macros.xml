@@ -1,6 +1,6 @@
 <macros>
     <token name="@TOOL_VERSION@">2.0.0</token>
-    <token name="@VERSION_SUFFIX@">0</token>
+    <token name="@VERSION_SUFFIX@">1</token>
     <xml name="cdo_requirements">
         <requirements>
             <requirement type="package" version="@TOOL_VERSION@">cdo</requirement>
@@ -29,5 +29,10 @@
         <citations>
             <citation type="doi">10.5281/zenodo.3539275</citation>
         </citations>
+    </xml>
+    <xml name="creator">
+        <creator>
+            <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+        </creator>
     </xml>
 </macros>

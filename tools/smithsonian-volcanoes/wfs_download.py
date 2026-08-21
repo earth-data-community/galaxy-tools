@@ -62,8 +62,7 @@ class WFSservices ():
             idx = list(wfs.contents).index(self.typename)
         except ValueError:
             idx = -1
-            print("Invalid typename " + self.typename +
-                  ' with WFS service ' + self.url)
+            print("Invalid typename " + self.typename + ' with WFS service ' + self.url)
 
         if idx >= 0:
             response = wfs.getfeature(typename=self.typename,

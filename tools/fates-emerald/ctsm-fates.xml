@@ -1,5 +1,19 @@
-<tool id="ctsm_fates" name="CTSM/FATES-EMERALD" version="2.0.1.1">
+<tool id="ctsm_fates" name="CTSM/FATES-EMERALD" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>Functionally Assembled Terrestrial Ecosystem Simulator</description>
+    <macros>
+        <token name="@TOOL_VERSION@">2.0.1.1</token> 
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
+    <edam_topics>
+      <edam_topic>topic_3855</edam_topic>
+      <edam_topic>topic_3318</edam_topic>
+      <edam_topic>topic_3050</edam_topic>
+      <edam_topic>topic_0610</edam_topic>
+    </edam_topics>
+    <edam_operations>
+      <edam_operation>operation_3946</edam_operation>
+      <edam_operation>operation_2426</edam_operation>
+    </edam_operations>
     <requirements>
         <requirement type="package" version="2.0.1">fates-emerald</requirement>
         <requirement type="package" version="1.32">tar</requirement>
@@ -7,6 +21,11 @@
         <requirement type="package" version="3">python</requirement>
         <requirement type="package" version="2.0132">perl-xml-libxml</requirement>
     </requirements>
+	<required_files>
+        <include path="config"/>
+		<include path="config_compilers.xml"/>
+		<include path="config_machines.xml"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
           ( export HOME=`pwd` &&
           export USER='jovyan' &&
@@ -214,9 +233,13 @@
             <param name="inputdata" value="inputdata_test.tar" />
             <param name="casename" value="test" />
             <param name="resolution" value="1x1_ALP1" />
-            <param name="run_startdate" value="2000-01-01" />
-            <param name="stop_option" value="nsteps" />
-            <param name="stopn" value="1" />
+			<section name="adv_period">
+				<conditional name="condi_type_run">
+            		<param name="run_startdate" value="2000-01-01" />
+				</conditional>
+	            <param name="stop_option" value="nsteps" />
+	            <param name="stopn" value="1" />
+			</section>
             <output name="atm_log" ftype="txt">
               <assert_contents>
                   <has_text text="(datm_comp_final) atm: end of main integration loop" />
@@ -258,8 +281,10 @@
             <param name="inputdata" value="inputdata_test.tar" />
             <param name="casename" value="one_month" />
             <param name="resolution" value="1x1_ALP1" />
-            <param name="stop_option" value="nmonths" />
-            <param name="stopn" value="1" />
+			<section name="adv_period">
+	            <param name="stop_option" value="nmonths" />
+	            <param name="stopn" value="1" />
+			</section>
             <output name="atm_log" ftype="txt">
               <assert_contents>
                   <has_text text="(datm_comp_final) atm: end of main integration loop" />
@@ -354,16 +379,18 @@ Finnmark Site:
 
     ]]></help>
     <citations>
-
+		<citation type="bibtex">
+			@misc{emerald_webinar_2020,
+			  author       = {Tang, J. and others},
+			  title        = {Webinar: CLM-FATES Platform},
+			  year         = {2020},
+			  month        = {August},
+			  howpublished = {\url{https://www.mn.uio.no/geo/english/research/projects/emerald/events/webinar_aug-2020_tang_clm_fates_platform.pdf}},
+			  note         = {Webinar presentation on the CLM-FATES platform, part of the EMERALD project.}
+			}
+			</citation>
     </citations>
-    <edam_topics>
-      <edam_topic>topic_3855</edam_topic>
-      <edam_topic>topic_3318</edam_topic>
-      <edam_topic>topic_3050</edam_topic>
-      <edam_topic>topic_0610</edam_topic>
-    </edam_topics>
-    <edam_operations>
-      <edam_operation>operation_3946</edam_operation>
-      <edam_operation>operation_2426</edam_operation>
-    </edam_operations>
+	<creator>
+		<person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+	</creator>
 </tool>

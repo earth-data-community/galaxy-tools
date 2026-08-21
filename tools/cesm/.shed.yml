@@ -6,5 +6,5 @@ long_description: |
   This tool is a wrapper for the Community Earth System Model. It allows the creation of a new case (startup), or a hybrid run where restart files will have to be specified too. The simulation can be customized by the most common options. Please note that some configurations may require large number of CPUs to run and may not be available on all Galaxy instances.
 name: cesm
 owner: climate
-remote_repository_url: https://github.com/ESCOMP/CESM
+remote_repository_url: https://github.com/earth-data-comunity/galaxy-tools/tree/master/tools/cesm
 type: unrestricted

@@ -1,4 +1,4 @@
-<tool id="eodie" name="EODIE" version="@VERSION@" profile="20.09">
+<tool id="eodie" name="EODIE" version="@VERSION@+galaxy@VERSION_SUFFIX@" profile="@PROFILE@">
     <description>converts simple features data between file formats</description>
     <macros>
         <import>macros.xml</import>
@@ -17,6 +17,9 @@
         <requirement type="package" version="6.0">unzip</requirement>
         <requirement type="package" version="1.34">tar</requirement>
     </requirements>
+	<required_files>
+		<include path="postprocess_csv.sh"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
         mkdir -p work/data_collection work/results results_csv results_tiffs &&
         cp '$config_tif' config_tif.yml && 
@@ -359,5 +362,6 @@ EODIE takes the objects in as polygons in a shapefile as well as the timeframe o
 The output is a per polygon timeseries of the selected features over the timeframe of interest.
 
     ]]>    </help>
-    <expand macro="citations" />
+    <expand macro="citations"/>
+    <expand macro="creator"/>
 </tool>

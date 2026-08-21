@@ -1,5 +1,9 @@
-<tool id="cads" name="Copernicus Atmosphere Data Store" version="0.1.1" profile="25.1">
+<tool id="cads" name="Copernicus Atmosphere Data Store" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>for retrieving data from the Atmosphere Monitoring Service</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.1.1</token> 
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
 	<edam_topics>
       <edam_topic>topic_3855</edam_topic>
       <edam_topic>topic_3318</edam_topic>
@@ -105,4 +109,7 @@ that may be made of the Copernicus information or data it contains.
     <citations>
 	    <citation type="bibtex">@misc{CADS,author={Copernicus Atmosphere Data Store}}</citation>
     </citations>
+	<creator>
+		<person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+	</creator>
 </tool>
