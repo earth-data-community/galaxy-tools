@@ -1,0 +1,47 @@
+<tool id="concatenate_icenet_data" name="Concatenate Icenet Data" version="0.1.0+galaxy0" profile="21.05">
+    <description>for concatenating yearly sea ice concentration netcdf files</description>
+        <requirements>
+            <requirement type="package" version= "3.10.9">python</requirement>
+            <requirement type="package" version="2023.1.0">xarray</requirement>
+            <requirement type="package" version="1.6.0">netcdf4</requirement>
+            <requirement type="package" version="1.2.0">h5netcdf</requirement>
+            <requirement type="package" version="2023.6.0">dask</requirement>
+        </requirements>
+        <command detect_errors="exit_code"><![CDATA[
+            python3 '$__tool_directory__/concatenate.py' --input ${" ".join(map(str, $siconca_files))}      &&
+            echo "concatenation is done"
+        ]]></command>
+        <inputs>
+            <param name="siconca_files" type="data_collection" label="Monthly averaged yearly OSI-SAF sea ice concentration files from 1979-present" help="These files are provided in the Data Library under Earth System Community Modeling/sea-ice and were downloaded from the following sites: OSI-450 (1979-2016): https://thredds.met.no/thredds/dodsC/osisaf/met.no/reprocessed/ice/conc_v2p0_nh_agg.html, OSI-430-b (2016-present): https://thredds.met.no/thredds/dodsC/osisaf/met.no/reprocessed/ice/conc_crb_nh_agg.html"/>
+        </inputs>
+        <outputs>
+             <data name="siconca" format="netcdf" from_work_dir="siconca.nc"/>
+        </outputs>
+        <tests>
+        <!--
+        <test>
+            <param name="siconca_files">
+            <collection type="list">
+                  <element name="siconca1" value="siconca_files/siconca1.nc" />
+                  <element name="siconca2" value="siconca_files/siconca2.nc" />
+            </collection>
+            </param>
+            <output name="siconca">
+               <assert_contents>
+                   <has_size value="37348142 " delta="100"/>
+               </assert_contents>
+            </output>
+        </test>
+        -->
+        </tests>
+        <help><![CDATA[
+            This tool is a wrapper to concatenate yearly sea ice concentration netcdf files. These files are provided in the Data Library under Earth System Community Modeling/sea-ice and were downloaded from the following sites:
+            - OSI-450 (1979-2016): https://thredds.met.no/thredds/dodsC/osisaf/met.no/reprocessed/ice/conc_v2p0_nh_agg.html
+            - OSI-430-b (2016-present): https://thredds.met.no/thredds/dodsC/osisaf/met.no/reprocessed/ice/conc_crb_nh_agg.html.
+            The tool generates one netcdf file with all of the yearly sea ice concentration data from 1979-present which serves as an input for the Preprocess Icenet Data Tool.
+    ]]></help>
+    <citations>
+       <citation type="doi">10.5281/zenodo.5176573
+       </citation>
+    </citations>
+</tool>
