@@ -1,0 +1,531 @@
+<?xml version="1.0"?>
+<tool id="climate_to_stics" name="Climate to STICS Format" version="1.0.0+galaxy1" profile="21.05">
+    <description>
+        Transforms climate data (ERA5, SAFRAN/GeoSAS, DRIAS-2020 or custom) into STICS crop model daily input files
+    </description>
+
+    <!-- ===================================================================
+         CREATOR
+    =================================================================== -->
+    <creator>
+        <person givenName="Mathieu" familyName="Guimont" url="https://github.com/TODO_your-github-username"/>
+    </creator>
+
+    <!-- ===================================================================
+         REQUIREMENTS
+    =================================================================== -->
+    <requirements>
+        <requirement type="package" version="2024.10.0">xarray</requirement>
+        <requirement type="package" version="2.2.1">pandas</requirement>
+        <requirement type="package" version="1.26.4">numpy</requirement>
+        <requirement type="package" version="0.14.0">geopandas</requirement>
+        <requirement type="package" version="1.3.9">rasterio</requirement>
+        <requirement type="package" version="0.15.7">rioxarray</requirement>
+        <requirement type="package" version="14.0.0">pyarrow</requirement>
+    </requirements>
+
+    <!-- ===================================================================
+         REQUIRED FILES
+         Ensures the conversion script ships alongside the tool XML when
+         Galaxy relocates the tool directory for remote execution (Pulsar).
+    =================================================================== -->
+    <required_files>
+        <include path="climate_to_stics.py"/>
+    </required_files>
+
+    <version_command>python '$__tool_directory__/climate_to_stics.py' --version</version_command>
+
+    <!-- ===================================================================
+         COMMAND
+    =================================================================== -->
+    <command detect_errors="exit_code"><![CDATA[
+        python '$__tool_directory__/climate_to_stics.py'
+
+        ## --- Source type ---
+        --source_type '$data_source.source_type'
+
+        ## --- Input files ---
+        #if $data_source.source_type == 'drias':
+            --drias_zip '$data_source.drias_zip'
+        #else:
+            --input_file '$data_source.input_file'
+            --input_format '${data_source.input_file.ext}'
+        #end if
+
+        ## --- Spatial ---
+        --epsg '$spatial.epsg'
+        #if $spatial.shapefile_zip:
+            --shapefile_zip '$spatial.shapefile_zip'
+        #end if
+        #if $spatial.cell_id_column:
+            --cell_id_column '$spatial.cell_id_column'
+        #end if
+
+        ## --- CO2 ---
+        ## CO2 concentrations are retrieved automatically by the script
+        ## (Mauna Loa online + ice cores before 1959): no file required.
+
+        ## --- Advanced ---
+        --wind_correction_factor '$advanced.wind_correction_factor'
+        #if $advanced.custom_var_mapping:
+            --custom_var_mapping '$advanced.custom_var_mapping'
+        #end if
+
+        ## --- Output ---
+        --output_zip '$output_zip'
+        --log_file  '$log_output'
+    ]]></command>
+
+    <!-- ===================================================================
+         INPUTS
+    =================================================================== -->
+    <inputs>
+
+        <!-- ── Data source ──────────────────────────────────────────── -->
+        <conditional name="data_source">
+            <param name="source_type" type="select"
+                   label="Climate data source"
+                   help="Determines the variable mapping and unit conversions applied automatically.">
+                <option value="era5">ERA5 (Copernicus Climate Data Store)</option>
+                <option value="safran">SAFRAN / GeoSAS (Météo-France)</option>
+                <option value="drias">DRIAS-2020 (ZIP archive of NetCDF files)</option>
+                <option value="custom">Custom (manual JSON mapping)</option>
+            </param>
+
+            <when value="era5">
+                <param name="input_file" type="data"
+                       format="netcdf,h5,tabular,csv,parquet,json"
+                       label="ERA5 file"
+                       help="NetCDF (or tabular) file containing daily ERA5 variables.
+                             Expected variables: mx2t / mn2t (temperatures), ssrd (radiation),
+                             tp (precipitation), pev (ETP), si10 / u10+v10 (wind), d2m (dew point).
+                             The data must be at a daily time step (accumulated over 24 h)."/>
+            </when>
+
+            <when value="safran">
+                <param name="input_file" type="data"
+                       format="tabular,csv,geocsv,netcdf,parquet,json"
+                       label="SAFRAN / GeoSAS file"
+                       help="File produced by the GeoSAS extraction tool.
+                             Expected variables: Tmax, Tmin (°C), RR (mm), ETP (mm),
+                             Rg (MJ/m²/day), FF (m/s), HU (%).
+                             A cell identifier (column 'cell' or equivalent) is required
+                             if the file is tabular (no shapefile rasterisation)."/>
+            </when>
+
+            <when value="drias">
+                <param name="drias_zip" type="data"
+                       format="zip"
+                       label="ZIP archive of DRIAS-2020 NetCDF files"
+                       help="ZIP archive containing the DRIAS NetCDF files (one file per variable).
+                             Expected names: *tasmax*.nc, *tasmin*.nc, *huss*.nc, *sfcWind*.nc,
+                             *rsds*.nc, *prtot*.nc, *evspsblpot*.nc.
+                             Variables in K (temperatures), kg/m²/s (precip., ETP), W/m² (radiation)."/>
+            </when>
+
+            <when value="custom">
+                <param name="input_file" type="data"
+                       format="netcdf,h5,tabular,csv,geocsv,parquet,json"
+                       label="Climate data file"/>
+                <param name="custom_unit_temp" type="select"
+                       label="Temperature unit (Tmax / Tmin)">
+                    <option value="celsius">°C – Celsius</option>
+                    <option value="kelvin">K – Kelvin</option>
+                </param>
+                <param name="custom_unit_rsds" type="select"
+                       label="Solar radiation unit">
+                    <option value="mj_m2">MJ/m²/day</option>
+                    <option value="j_m2">J/m²/day (ERA5 style: ÷ 10⁶)</option>
+                    <option value="w_m2">W/m² (CMIP style: × 86400 ÷ 10⁶)</option>
+                </param>
+                <param name="custom_unit_precip" type="select"
+                       label="Precipitation unit">
+                    <option value="mm">mm/day</option>
+                    <option value="m">m/day (ERA5 style: × 1000)</option>
+                    <option value="kg_m2_s">kg/m²/s (CMIP style: × 86400)</option>
+                </param>
+                <param name="custom_unit_etp" type="select"
+                       label="ETP unit">
+                    <option value="mm">mm/day</option>
+                    <option value="m_neg">negative m/day (ERA5 pev style: × −1000)</option>
+                    <option value="kg_m2_s">kg/m²/s (CMIP style: × 86400)</option>
+                </param>
+            </when>
+        </conditional>
+
+        <!-- ── Spatial ──────────────────────────────────────────────── -->
+        <section name="spatial" title="Spatial parameters" expanded="true">
+            <param name="epsg" type="text" value="EPSG:4326"
+                   label="Input data projection (EPSG code)"
+                   help="E.g.: EPSG:4326 (WGS84), EPSG:2154 (RGF93/Lambert-93), EPSG:27572 (extended Lambert II).">
+                <validator type="regex" message="Expected format: EPSG:XXXX (e.g. EPSG:4326)">EPSG:\d+</validator>
+            </param>
+            <param name="shapefile_zip" type="data" format="zip" optional="true"
+                   label="Spatial cells shapefile (ZIP archive)"
+                   help="ZIP archive containing the shapefile (.shp, .shx, .dbf, .prj).
+                         Required for gridded (NetCDF) data without a cell ID column.
+                         The shapefile must have a 'cell' column with the numeric ID of each cell."/>
+            <param name="cell_id_column" type="text" value="cell" optional="true"
+                   label="Cell ID column name (tabular data)"
+                   help="For CSV / TSV / Parquet / JSON files that already contain the cell ID.
+                         Default: 'cell'. Not used when a shapefile is provided."/>
+        </section>
+
+        <!-- ── CO2 ──────────────────────────────────────────────────── -->
+        <!-- Annual CO2 concentrations are no longer supplied by the user:
+             the script retrieves them automatically (NOAA/GML Mauna Loa
+             series fetched online for 1959+, complemented by GISS/Etheridge
+             ice-core values for years before 1959). -->
+
+        <!-- ── Advanced ─────────────────────────────────────────────── -->
+        <section name="advanced" title="Advanced parameters" expanded="false">
+            <param name="wind_correction_factor" type="float" value="0.7" min="0.1" max="1.0"
+                   label="Wind height correction factor"
+                   help="Converts wind speed to 2 m height (STICS reference) from the measurement height (10 m for ERA5/DRIAS/SAFRAN).
+                         Standard logarithmic profile: 0.7 ≈ ln(2/0.03)/ln(10/0.03).
+                         Set to 1.0 to disable the correction."/>
+            <param name="custom_var_mapping" type="text" value="" optional="true" area="true"
+                   label="Custom variable mapping (JSON)"
+                   help='JSON object mapping the internal STICS name to the variable name in the source file.
+                         Valid keys: tasmax, tasmin, wind, rsds, prtot, etp, hr, vapp, huss, d2m, u10, v10.
+                         Example: {"tasmax": "T_max", "prtot": "PRECIP", "wind": "FF_10m"}
+                         This mapping overrides the predefined mappings (ERA5, SAFRAN, DRIAS).'/>
+        </section>
+
+    </inputs>
+
+    <!-- ===================================================================
+         OUTPUTS
+    =================================================================== -->
+    <outputs>
+        <data name="output_zip" format="zip"
+              label="${tool.name} – STICS files (${data_source.source_type})"/>
+        <data name="log_output" format="txt"
+              label="${tool.name} – Processing log"/>
+    </outputs>
+
+    <!-- ===================================================================
+         TESTS
+    =================================================================== -->
+    <tests>
+        <test expect_num_outputs="2">
+            <conditional name="data_source">
+                <param name="source_type" value="safran"/>
+                <param name="input_file" value="test_safran.csv" ftype="csv"/>
+            </conditional>
+            <section name="spatial">
+                <param name="epsg" value="EPSG:4326"/>
+                <param name="cell_id_column" value="cell"/>
+            </section>
+            <output name="log_output">
+                <assert_contents>
+                    <has_text text="Done."/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
+
+    <!-- ===================================================================
+         HELP
+    =================================================================== -->
+    <help><![CDATA[
+
+.. class:: infomark
+
+**Climate to STICS Format** converts daily climate data from ERA5,
+SAFRAN/GeoSAS or DRIAS-2020 into input files compatible with the **STICS**
+crop model (multidisciplinary simulator for standard crops).
+
+-----
+
+**What this tool does**
+========================
+
+1. **Loads** climate data in various formats (NetCDF, CSV, TSV, JSON, Parquet).
+2. **Renames and converts** variables according to their source (ERA5, SAFRAN, DRIAS or custom JSON mapping).
+3. **Computes derived variables** not present in the source (mean temperature, relative humidity, vapour pressure).
+4. **Assigns each pixel/row** to a spatial cell ID (via a shapefile or an existing column).
+5. **Automatically retrieves and merges** annual CO2 concentrations
+   (NOAA/GML Mauna Loa series downloaded online for 1959 onward,
+   complemented by ice-core values for earlier years).
+6. **Exports** a ZIP archive containing one directory per cell and one file per year,
+   in the headerless TSV format expected by STICS.
+
+-----
+
+**STICS output format**
+========================
+
+Each file ``{cell_id}.{year}`` is a headerless TSV with columns in this exact order:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 20 60
+
+   * - Column
+     - Unit
+     - Description
+   * - Cell ID
+     - –
+     - Integer ID of the spatial cell
+   * - Year
+     - –
+     - Calendar year
+   * - Month
+     - –
+     - Month (1–12)
+   * - Day of month
+     - –
+     - Day within the month (1–31)
+   * - Day of year
+     - –
+     - Julian day (1–365/366)
+   * - tasmin
+     - °C
+     - Daily minimum temperature
+   * - tasmax
+     - °C
+     - Daily maximum temperature
+   * - rsds
+     - MJ/m²/day
+     - Global solar radiation
+   * - etp
+     - mm/day
+     - Potential evapotranspiration
+   * - prtot
+     - mm/day
+     - Total precipitation
+   * - wind
+     - m/s
+     - Wind speed at 2 m
+   * - vapp
+     - hPa
+     - Air vapour pressure
+   * - co2
+     - ppm
+     - Atmospheric CO2 concentration
+
+-----
+
+**Variable mapping by source**
+===============================
+
+ERA5 (Copernicus)
+------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 30 25 20
+
+   * - STICS variable
+     - ERA5 name
+     - Input unit
+     - Conversion
+   * - tasmax
+     - ``mx2t`` / ``mx2t24``
+     - K
+     - − 273.15
+   * - tasmin
+     - ``mn2t`` / ``mn2t24``
+     - K
+     - − 273.15
+   * - rsds
+     - ``ssrd``
+     - J/m² (daily accumulation)
+     - ÷ 10⁶
+   * - prtot
+     - ``tp``
+     - m/day
+     - × 1000
+   * - etp
+     - ``pev`` / ``e``
+     - m/day (often negative)
+     - absolute value × 1000
+   * - wind
+     - ``si10`` or ``u10``+``v10``
+     - m/s (10 m)
+     - × height factor
+   * - vapp
+     - computed from ``d2m``
+     - K
+     - August–Roche–Magnus
+
+.. note::
+   For ``u10`` + ``v10``, the resulting speed is computed as: ``wind = √(u10² + v10²) × factor``.
+   Vapour pressure is derived from the dew point ``d2m`` (August–Roche–Magnus formula).
+
+SAFRAN / GeoSAS (Météo-France)
+--------------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 30 25 20
+
+   * - STICS variable
+     - GeoSAS name
+     - Input unit
+     - Conversion
+   * - tasmax
+     - ``Tmax`` / ``T_max``
+     - °C
+     - none
+   * - tasmin
+     - ``Tmin`` / ``T_min``
+     - °C
+     - none
+   * - rsds
+     - ``Rg`` / ``GLO``
+     - MJ/m²/day
+     - none
+   * - prtot
+     - ``RR`` / ``Precip``
+     - mm/day
+     - none
+   * - etp
+     - ``ETP``
+     - mm/day
+     - none
+   * - wind
+     - ``FF`` / ``Vent``
+     - m/s (10 m)
+     - × height factor
+   * - hr
+     - ``HU`` / ``Hrel``
+     - %
+     - none
+   * - vapp
+     - computed from ``HU`` + ``Tmean``
+     - –
+     - Tetens
+
+DRIAS-2020 (CMIP5/6, climate projections)
+-------------------------------------------
+
+DRIAS NetCDF files contain one variable per file.
+The tool detects them automatically from the file name pattern (``*tasmax*.nc``, etc.).
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 30 25 20
+
+   * - STICS variable
+     - DRIAS name
+     - Input unit
+     - Conversion
+   * - tasmax
+     - ``tasmaxAdjust``
+     - K
+     - − 273.15
+   * - tasmin
+     - ``tasminAdjust``
+     - K
+     - − 273.15
+   * - rsds
+     - ``rsdsAdjust``
+     - W/m²
+     - × 86400 ÷ 10⁶
+   * - prtot
+     - ``prtotAdjust``
+     - kg/m²/s
+     - × 86400
+   * - etp
+     - ``evspsblpotAdjust``
+     - kg/m²/s
+     - × 86400
+   * - wind
+     - ``sfcWindAdjust``
+     - m/s (10 m)
+     - × height factor
+   * - huss → hr → vapp
+     - ``hussAdjust``
+     - kg/kg
+     - psat + Tetens formula
+
+-----
+
+**CO2 concentrations (automatic)**
+====================================
+
+Annual CO2 concentrations no longer need to be **supplied**: the tool builds
+the table itself, from two combined sources:
+
+- **1959 → present**: Mauna Loa annual mean, downloaded online from
+  NOAA/GML (``co2_annmean_mlo.txt``). The most recent value available is
+  therefore used automatically on every run.
+- **before 1959**: ice-core record adjusted to the global mean
+  (NASA/GISS, after Etheridge et al. 1996), bundled with the script.
+
+The CO2 value (ppm) is added as the last column of each STICS file.
+
+.. note::
+   Downloading the Mauna Loa series requires network access to
+   ``gml.noaa.gov`` at run time. If unavailable, the tool automatically
+   falls back to a bundled snapshot (1959-2023) and reports this in the log.
+
+-----
+
+**Cell shapefile**
+====================
+
+The ZIP archive must contain the standard shapefile components:
+``.shp``, ``.shx``, ``.dbf``, ``.prj`` (and optionally ``.cpg``).
+The shapefile must have a ``cell`` column with the integer ID of each cell.
+
+For **tabular** data (CSV/TSV/Parquet/JSON) that already contains a cell ID column,
+the shapefile is not needed — simply give the column name in "Spatial parameters".
+
+-----
+
+**Custom mapping (JSON)**
+============================
+
+For a non-predefined source, provide a JSON object in the advanced text field::
+
+    {
+      "tasmax":  "T_max_2m",
+      "tasmin":  "T_min_2m",
+      "prtot":   "PRECIP_TOTAL",
+      "rsds":    "RAY_GLOB",
+      "etp":     "EVAP_POT",
+      "wind":    "VENT_MOY",
+      "hr":      "HUMID_REL"
+    }
+
+This mapping **overrides** (and extends) the predefined mappings for the selected source.
+
+-----
+
+**Workflow integration**
+==========================
+
+This tool is designed to chain with:
+
+- **ERA5 Daily Extractor** (Galaxy CDS tool) → ``input_file`` (NetCDF, ERA5 source)
+- **GeoSAS SAFRAN Extractor** → ``input_file`` (CSV or NetCDF, SAFRAN source)
+- **STICS Runner** → consumes the produced ZIP archive
+
+    ]]></help>
+
+    <!-- ===================================================================
+         CITATIONS
+    =================================================================== -->
+    <citations>
+
+        <!-- STICS model -->
+        <citation type="doi">10.1016/S1161-0301(02)00110-7</citation>
+
+        <!-- ERA5 reanalysis -->
+        <citation type="doi">10.1002/qj.3803</citation>
+
+        <!-- SAFRAN -->
+        <citation type="doi">10.1175/2007JAMC1636.1</citation>
+
+        <!-- xarray -->
+        <citation type="doi">10.5334/jors.148</citation>
+
+        <!-- CO2 - ice core record (pre-1959) -->
+        <citation type="doi">10.1029/95JD03410</citation>
+
+    </citations>
+
+</tool>
