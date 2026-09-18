@@ -1,0 +1,1310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Galaxy tool wrapper — Climate Indices Computation (icclim)
+  MNHN / PNDB — Geomatys — 2026
+  Compatible icclim 7.0.5 / xarray 2025.6.1 / xclim 0.60.0
+  Phase 4 : <repeat name="indices"> multi-indices, <conditional> user_indice.
+-->
+<tool id="icclim_climate_indices" name="Climate Indices Computation (icclim)" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="@PROFILE@">
+
+    <description>
+        from CF NetCDF files
+    </description>
+
+    <macros>
+        <token name="@TOOL_VERSION@">7.1.0</token>
+        <token name="@VERSION_SUFFIX@">0</token>
+        <token name="@PROFILE@">25.1</token>
+    </macros>
+
+    <requirements>
+        <requirement type="package" version="@TOOL_VERSION@">icclim</requirement>
+        <requirement type="package" version="2025.6.1">xarray</requirement>
+        <requirement type="package" version="0.60.0">xclim</requirement>
+        <requirement type="package" version="2.3.3">pandas</requirement>
+    </requirements>
+    
+    <required_files>
+        <include path="icclim_climate_indices.py"/>
+    </required_files>
+
+    <command detect_errors="exit_code"><![CDATA[
+## ── Compute each index ───────────────────────────────────────────────────────
+#for $g, $grp in enumerate($file_groups)
+## Symlink input files for group g
+#for $j, $f in enumerate($grp.input_files)
+ln -sf '${f}' '_icclim_g${g}_f${j}.nc' &&
+#end for
+## Compute: one call per (input_file × index) when split_by_file, else per index
+#if $split_by_file == "yes"
+#for $j, $f in enumerate($grp.input_files)
+#for $i, $run in enumerate($grp.indices)
+python '$__tool_directory__/icclim_climate_indices.py'
+    --input '_icclim_g${g}_f${j}.nc'
+    --index-name '${run.index_sel.index_name}'
+    --slice-mode '${run.slice_mode}'
+    --output '_icclim_g${g}_f${j}_i${i}.nc'
+    --netcdf-version '$global_opts.netcdf_version'
+    --logs-verbosity '$global_opts.logs_verbosity'
+    --sampling-method '$global_opts.sampling_method'
+    #if $run.var_name
+    --var-name '${run.var_name}'
+    #end if
+    #if $run.adv.time_range_start and $run.adv.time_range_end
+    --time-range '${run.adv.time_range_start}' '${run.adv.time_range_end}'
+    #end if
+    #if $run.adv.base_period_start and $run.adv.base_period_end
+    --base-period-time-range '${run.adv.base_period_start}' '${run.adv.base_period_end}'
+    #end if
+    ${run.adv.only_leap_years}
+    ${run.adv.ignore_Feb29th}
+    ${run.adv.save_thresholds}
+    ${run.adv.date_event}
+    #if $run.adv.min_spell_length
+    --min-spell-length ${run.adv.min_spell_length}
+    #end if
+    #if $run.adv.rolling_window_width
+    --rolling-window-width ${run.adv.rolling_window_width}
+    #end if
+    #if $run.adv.out_unit
+    --out-unit '${run.adv.out_unit}'
+    #end if
+    #if $run.adv.threshold
+    --threshold '${run.adv.threshold}'
+    #end if
+    #if $run.adv.doy_window_width
+    --doy-window-width ${run.adv.doy_window_width}
+    #end if
+    #if $run.adv.interpolation
+    --interpolation '${run.adv.interpolation}'
+    #end if
+    #if $run.index_sel.index_name == "CUSTOM"
+    --user-index
+    --ui-index-name '${run.index_sel.ui_index_name}'
+    --ui-calc-operation '${run.index_sel.ui_calc_operation}'
+    #if $run.index_sel.ui_var_type
+    --ui-var-type '${run.index_sel.ui_var_type}'
+    #end if
+    #if $run.index_sel.ui_thresh
+    --ui-thresh '${run.index_sel.ui_thresh}'
+    #end if
+    #if $run.index_sel.ui_logical_operation
+    --ui-logical-operation '${run.index_sel.ui_logical_operation}'
+    #end if
+    #if $run.index_sel.ui_link_logical_operations
+    --ui-link-logical-operations '${run.index_sel.ui_link_logical_operations}'
+    #end if
+    ${run.index_sel.ui_date_event}
+    #if $run.index_sel.ui_coef
+    --ui-coef ${run.index_sel.ui_coef}
+    #end if
+    #if $run.index_sel.ui_extreme_mode
+    --ui-extreme-mode '${run.index_sel.ui_extreme_mode}'
+    #end if
+    #if $run.index_sel.ui_window_width
+    --ui-window-width ${run.index_sel.ui_window_width}
+    #end if
+    #if $run.index_sel.ui_ref_time_range_start and $run.index_sel.ui_ref_time_range_end
+    --ui-ref-time-range '${run.index_sel.ui_ref_time_range_start}' '${run.index_sel.ui_ref_time_range_end}'
+    #end if
+    #end if
+&&
+#end for
+#end for
+#else
+## All files together, one call per index
+#for $i, $run in enumerate($grp.indices)
+python '$__tool_directory__/icclim_climate_indices.py'
+    --input #for $j, $f in enumerate($grp.input_files)#'_icclim_g${g}_f${j}.nc' #end for#
+    --index-name '${run.index_sel.index_name}'
+    --slice-mode '${run.slice_mode}'
+    --output '_icclim_g${g}_i${i}.nc'
+    --netcdf-version '$global_opts.netcdf_version'
+    --logs-verbosity '$global_opts.logs_verbosity'
+    --sampling-method '$global_opts.sampling_method'
+    #if $run.var_name
+    --var-name '${run.var_name}'
+    #end if
+    #if $run.adv.time_range_start and $run.adv.time_range_end
+    --time-range '${run.adv.time_range_start}' '${run.adv.time_range_end}'
+    #end if
+    #if $run.adv.base_period_start and $run.adv.base_period_end
+    --base-period-time-range '${run.adv.base_period_start}' '${run.adv.base_period_end}'
+    #end if
+    ${run.adv.only_leap_years}
+    ${run.adv.ignore_Feb29th}
+    ${run.adv.save_thresholds}
+    ${run.adv.date_event}
+    #if $run.adv.min_spell_length
+    --min-spell-length ${run.adv.min_spell_length}
+    #end if
+    #if $run.adv.rolling_window_width
+    --rolling-window-width ${run.adv.rolling_window_width}
+    #end if
+    #if $run.adv.out_unit
+    --out-unit '${run.adv.out_unit}'
+    #end if
+    #if $run.adv.threshold
+    --threshold '${run.adv.threshold}'
+    #end if
+    #if $run.adv.doy_window_width
+    --doy-window-width ${run.adv.doy_window_width}
+    #end if
+    #if $run.adv.interpolation
+    --interpolation '${run.adv.interpolation}'
+    #end if
+    #if $run.index_sel.index_name == "CUSTOM"
+    --user-index
+    --ui-index-name '${run.index_sel.ui_index_name}'
+    --ui-calc-operation '${run.index_sel.ui_calc_operation}'
+    #if $run.index_sel.ui_var_type
+    --ui-var-type '${run.index_sel.ui_var_type}'
+    #end if
+    #if $run.index_sel.ui_thresh
+    --ui-thresh '${run.index_sel.ui_thresh}'
+    #end if
+    #if $run.index_sel.ui_logical_operation
+    --ui-logical-operation '${run.index_sel.ui_logical_operation}'
+    #end if
+    #if $run.index_sel.ui_link_logical_operations
+    --ui-link-logical-operations '${run.index_sel.ui_link_logical_operations}'
+    #end if
+    ${run.index_sel.ui_date_event}
+    #if $run.index_sel.ui_coef
+    --ui-coef ${run.index_sel.ui_coef}
+    #end if
+    #if $run.index_sel.ui_extreme_mode
+    --ui-extreme-mode '${run.index_sel.ui_extreme_mode}'
+    #end if
+    #if $run.index_sel.ui_window_width
+    --ui-window-width ${run.index_sel.ui_window_width}
+    #end if
+    #if $run.index_sel.ui_ref_time_range_start and $run.index_sel.ui_ref_time_range_end
+    --ui-ref-time-range '${run.index_sel.ui_ref_time_range_start}' '${run.index_sel.ui_ref_time_range_end}'
+    #end if
+    #end if
+&&
+#end for
+#end if
+#end for
+
+## ── Output assembly ─────────────────────────────────────────────────────────
+#if $split_by_file == "no" and $split_by_index == "no" and len($file_groups) == 1
+## Single group, no split → single output file (intra-group merge only)
+python '$__tool_directory__/icclim_climate_indices.py'
+    --merge-outputs
+    --output '${output}'
+    --input #for $i, $run in enumerate($file_groups[0].indices)#'_icclim_g0_i${i}.nc' #end for#
+#else
+mkdir -p output_split &&
+#if $split_by_file == "no" and $split_by_index == "no"
+## Multiple groups, no split → one merged file per group (no cross-group merge)
+#for $g, $grp in enumerate($file_groups)
+python '$__tool_directory__/icclim_climate_indices.py'
+    --merge-outputs
+    --output 'output_split/g${g}.nc'
+    --input #for $i, $run in enumerate($grp.indices)#'_icclim_g${g}_i${i}.nc' #end for# &&
+#end for
+true
+#elif $split_by_file == "no" and $split_by_index == "yes"
+## One file per (group, index): move individual index files
+#for $g, $grp in enumerate($file_groups)
+#for $i, $run in enumerate($grp.indices)
+mv '_icclim_g${g}_i${i}.nc' 'output_split/g${g}_i${i}_${run.index_sel.index_name}.nc' &&
+#end for
+#end for
+true
+#elif $split_by_file == "yes" and $split_by_index == "no"
+## One file per (group, input_file): merge indices per file
+#for $g, $grp in enumerate($file_groups)
+#for $j, $f in enumerate($grp.input_files)
+python '$__tool_directory__/icclim_climate_indices.py'
+    --merge-outputs
+    --output 'output_split/g${g}_f${j}.nc'
+    --input #for $i, $run in enumerate($grp.indices)#'_icclim_g${g}_f${j}_i${i}.nc' #end for# &&
+#end for
+#end for
+true
+#else
+## One file per (group, input_file, index)
+#for $g, $grp in enumerate($file_groups)
+#for $j, $f in enumerate($grp.input_files)
+#for $i, $run in enumerate($grp.indices)
+mv '_icclim_g${g}_f${j}_i${i}.nc' 'output_split/g${g}_f${j}_i${i}_${run.index_sel.index_name}.nc' &&
+#end for
+#end for
+#end for
+true
+#end if
+#end if
+    ]]></command>
+
+    <inputs>
+
+        <!-- ###################################################################
+             OUTER REPEAT : each element = one group of similar input files
+             ################################################################### -->
+        <repeat name="file_groups" title="File Group" min="1">
+
+            <!-- Input files shared by all indices in this group ──────────────── -->
+            <param name="input_files"
+                   type="data"
+                   multiple="true"
+                   format="netcdf,h5"
+                   label="Input NetCDF file(s) for this group (CF-compliant)"
+                   help="One or more NetCDF files sharing the same time series (e.g. decade-split files for the same variable and site). All files are passed together to icclim for each index in this group." />
+
+            <!-- INNER REPEAT : indices to compute on this file group ────────── -->
+            <repeat name="indices" title="Index to Compute" min="1">
+
+            <!-- rg_0002 : index selection — wraps index_name + CUSTOM params ── -->
+            <conditional name="index_sel">
+            <param name="index_name"
+                   type="select"
+                   label="Climate index to compute"
+                   help="Select an ECA&amp;D/ETCCDI index, or choose '— Custom index —' to define your own. Compound indices CD, CW, WD, WW require both a temperature file (tas) and a precipitation file (pr) as input.">
+                <!-- Temperature -->
+                <option value="TG">TG — Mean daily temperature</option>
+                <option value="TN">TN — Minimum daily temperature</option>
+                <option value="TX">TX — Maximum daily temperature</option>
+                <option value="TXx">TXx — Monthly maximum of TX</option>
+                <option value="TXn">TXn — Monthly minimum of TX</option>
+                <option value="TNx">TNx — Monthly maximum of TN</option>
+                <option value="TNn">TNn — Monthly minimum of TN</option>
+                <option value="FD">FD — Frost days (TN &lt; 0°C)</option>
+                <option value="CFD">CFD — Consecutive frost days</option>
+                <option value="SU">SU — Summer days (TX &gt; 25°C)</option>
+                <option value="CSU">CSU — Consecutive summer days</option>
+                <option value="ID">ID — Ice days (TX &lt; 0°C)</option>
+                <option value="TR">TR — Tropical nights (TN &gt; 20°C)</option>
+                <option value="GD4">GD4 — Growing degree days (&gt; 4°C)</option>
+                <option value="HD17">HD17 — Heating degree days (&lt; 17°C)</option>
+                <option value="TG10p">TG10p — Cold days (TG &lt; 10th percentile)</option>
+                <option value="TG90p">TG90p — Warm days (TG &gt; 90th percentile)</option>
+                <option value="TN10p">TN10p — Cold nights (TN &lt; 10th percentile)</option>
+                <option value="TN90p">TN90p — Warm nights (TN &gt; 90th percentile)</option>
+                <option value="TX10p">TX10p — Cold days (TX &lt; 10th percentile)</option>
+                <option value="TX90p">TX90p — Warm days (TX &gt; 90th percentile)</option>
+                <option value="WSDI">WSDI — Warm spell duration index</option>
+                <option value="CSDI">CSDI — Cold spell duration index</option>
+                <option value="DTR">DTR — Diurnal temperature range</option>
+                <option value="ETR">ETR — Intra-period temperature range</option>
+                <option value="vDTR">vDTR — Variability of diurnal temperature range</option>
+                <!-- Precipitation -->
+                <option value="RR">RR — Total precipitation</option>
+                <option value="RR1">RR1 — Wet days (RR &gt;= 1 mm)</option>
+                <option value="SDII">SDII — Simple daily intensity index</option>
+                <option value="CWD">CWD — Consecutive wet days</option>
+                <option value="CDD">CDD — Consecutive dry days</option>
+                <option value="R10mm">R10mm — Heavy precipitation days (&gt;= 10 mm)</option>
+                <option value="R20mm">R20mm — Very heavy precipitation days (&gt;= 20 mm)</option>
+                <option value="RX1day">RX1day — Maximum 1-day precipitation</option>
+                <option value="RX5day">RX5day — Maximum consecutive 5-day precipitation</option>
+                <option value="R75p">R75p — Very wet days (&gt; 75th percentile)</option>
+                <option value="R95p">R95p — Extremely wet days (&gt; 95th percentile)</option>
+                <option value="R99p">R99p — Ultra-extreme wet days (&gt; 99th percentile)</option>
+                <option value="R75pTOT">R75pTOT — Precipitation fraction above 75th percentile</option>
+                <option value="R95pTOT">R95pTOT — Precipitation fraction above 95th percentile</option>
+                <option value="R99pTOT">R99pTOT — Precipitation fraction above 99th percentile</option>
+                <option value="PRCPTOT">PRCPTOT — Total precipitation on wet days (≥ 1 mm/day)</option>
+                <!-- Compound indices (temperature + precipitation) -->
+                <option value="CD">CD — Cold and Dry days (TG &lt; 25th perc. and RR &lt; 25th perc.)</option>
+                <option value="CW">CW — Cold and Wet days (TG &lt; 25th perc. and RR &gt; 75th perc.)</option>
+                <option value="WD">WD — Warm and Dry days (TG &gt; 75th perc. and RR &lt; 25th perc.)</option>
+                <option value="WW">WW — Warm and Wet days (TG &gt; 75th perc. and RR &gt; 75th perc.)</option>
+                <!-- Snow -->
+                <option value="SD">SD — Mean snow depth</option>
+                <option value="SD1">SD1 — Days with &gt;= 1 cm of snow</option>
+                <option value="SD5cm">SD5cm — Days with &gt;= 5 cm of snow</option>
+                <option value="SD50cm">SD50cm — Days with &gt;= 50 cm of snow</option>
+                <!-- Custom -->
+                <option value="CUSTOM">— Custom index (define your own) —</option>
+            </param>
+            <!-- Empty <when> blocks for all ECA&D indices (required by planemo lint) -->
+            <when value="TG"/><when value="TN"/><when value="TX"/>
+            <when value="TXx"/><when value="TXn"/><when value="TNx"/><when value="TNn"/>
+            <when value="FD"/><when value="CFD"/><when value="SU"/><when value="CSU"/>
+            <when value="ID"/><when value="TR"/><when value="GD4"/><when value="HD17"/>
+            <when value="TG10p"/><when value="TG90p"/>
+            <when value="TN10p"/><when value="TN90p"/>
+            <when value="TX10p"/><when value="TX90p"/>
+            <when value="WSDI"/><when value="CSDI"/>
+            <when value="DTR"/><when value="ETR"/><when value="vDTR"/>
+            <when value="RR"/><when value="RR1"/><when value="SDII"/>
+            <when value="CWD"/><when value="CDD"/>
+            <when value="R10mm"/><when value="R20mm"/>
+            <when value="RX1day"/><when value="RX5day"/>
+            <when value="R75p"/><when value="R95p"/><when value="R99p"/>
+            <when value="R75pTOT"/><when value="R95pTOT"/><when value="R99pTOT"/>
+            <when value="PRCPTOT"/>
+            <when value="CD"/><when value="CW"/><when value="WD"/><when value="WW"/>
+            <when value="SD"/><when value="SD1"/><when value="SD5cm"/><when value="SD50cm"/>
+            <when value="CUSTOM">
+                    <!-- rg_0023 -->
+                    <param name="ui_index_name"
+                           type="text"
+                           label="Custom index name"
+                           help="Free name — will appear in the output NetCDF file." />
+                    <!-- rg_0024 -->
+                    <param name="ui_calc_operation"
+                           type="select"
+                           label="Computation operation">
+                        <option value="mean">mean — Mean</option>
+                        <option value="sum">sum — Sum</option>
+                        <option value="max">max — Maximum</option>
+                        <option value="min">min — Minimum</option>
+                        <option value="nb_events">nb_events — Number of events</option>
+                        <option value="max_nb_consecutive_events">max_nb_consecutive_events — Maximum consecutive sequence</option>
+                        <option value="run_mean">run_mean — Running mean</option>
+                        <option value="run_sum">run_sum — Running sum</option>
+                        <option value="anomaly">anomaly — Anomaly relative to a reference</option>
+                    </param>
+                    <!-- rg_0025 -->
+                    <param name="ui_var_type"
+                           type="select"
+                           optional="true"
+                           label="Climate variable type">
+                        <option value="">-- Not specified --</option>
+                        <option value="t">t — Temperature</option>
+                        <option value="p">p — Precipitation</option>
+                    </param>
+                    <!-- rg_0026 -->
+                    <param name="ui_thresh"
+                           type="text"
+                           optional="true"
+                           label="Threshold"
+                           help="E.g. '25 degC', '10 mm/day', '0 degC'. Use pint units.">
+                        <sanitizer sanitize="false"/>
+                    </param>
+                    <!-- rg_0027 -->
+                    <param name="ui_logical_operation"
+                           type="select"
+                           optional="true"
+                           label="Logical operator">
+                        <option value="">-- Not specified --</option>
+                        <option value="gt">gt — strictly greater than (&gt;)</option>
+                        <option value="lt">lt — strictly less than (&lt;)</option>
+                        <option value="get">get — greater than or equal (&gt;=)</option>
+                        <option value="let">let — less than or equal (&lt;=)</option>
+                        <option value="e">e — equal (==)</option>
+                    </param>
+                    <!-- rg_0028 -->
+                    <param name="ui_link_logical_operations"
+                           type="select"
+                           optional="true"
+                           label="Logical link between multiple thresholds">
+                        <option value="">-- Not specified --</option>
+                        <option value="and">and — logical AND</option>
+                        <option value="or">or — logical OR</option>
+                    </param>
+                    <param name="ui_date_event"
+                           type="boolean"
+                           checked="false"
+                           truevalue="--ui-date-event"
+                           falsevalue=""
+                           label="Store the event date" />
+                    <param name="ui_coef"
+                           type="float"
+                           optional="true"
+                           label="Multiplicative coefficient"
+                           help="E.g. 0.001 to convert mm to m." />
+                    <param name="ui_extreme_mode"
+                           type="select"
+                           optional="true"
+                           label="Extreme mode">
+                        <option value="">-- Not specified --</option>
+                        <option value="min">min — Period minimum</option>
+                        <option value="max">max — Period maximum</option>
+                    </param>
+                    <param name="ui_window_width"
+                           type="integer"
+                           optional="true"
+                           min="1"
+                           label="Rolling window width"
+                           help="For run_mean or run_sum." />
+                    <!-- rg_0033 : reference period for anomaly -->
+                    <param name="ui_ref_time_range_start"
+                           type="text"
+                           optional="true"
+                           label="Reference period start (anomaly, YYYY-MM-DD)" />
+                    <param name="ui_ref_time_range_end"
+                           type="text"
+                           optional="true"
+                           label="Reference period end (anomaly, YYYY-MM-DD)" />
+            </when>
+            </conditional><!-- end index_sel -->
+
+            <!-- Computation frequency ────────────────────────────────────────── -->
+            <param name="slice_mode"
+                   type="select"
+                   label="Computation frequency"
+                   help="Period over which the index is computed. Note: all indices within the same file group must use the same frequency when the output is merged. If you need different frequencies, enable 'One output file per index'.">
+                <option value="year" selected="true">Annual</option>
+                <option value="month">Monthly</option>
+                <option value="DJF">Winter (DJF)</option>
+                <option value="MAM">Spring (MAM)</option>
+                <option value="JJA">Summer (JJA)</option>
+                <option value="SON">Autumn (SON)</option>
+                <option value="ONDJFM">Winter half-year (ONDJFM)</option>
+                <option value="AMJJAS">Summer half-year (AMJJAS)</option>
+            </param>
+
+            <!-- Climate variable (auto-detected if absent) ─────────────────── -->
+            <param name="var_name"
+                   type="text"
+                   optional="true"
+                   label="Climate variable name (optional)"
+                   help="Variable name in the NetCDF file (e.g. tasmax). Leave blank for auto-detection. For indices requiring two variables (CD, CW, WD, WW, DTR, ETR, vDTR), enter both names separated by a comma, e.g. tas,pr or tasmax,tasmin." />
+
+            <!-- Advanced parameters per index ──────────────────────────────── -->
+            <section name="adv" title="Advanced parameters" expanded="false">
+
+                <param name="time_range_start"
+                       type="text"
+                       optional="true"
+                       label="Time range start (YYYY-MM-DD)"
+                       help="E.g. 1990-01-01. Leave empty to use the full series." >
+                       <validator type="regex">^(\d{4}-\d{2}-\d{2})?$</validator>
+                </param>
+                <param name="time_range_end"
+                       type="text"
+                       optional="true"
+                       label="Time range end (YYYY-MM-DD)"
+                       help="E.g. 2020-12-31. Must be set if start is set." >
+                       <validator type="regex">^(\d{4}-\d{2}-\d{2})?$</validator>
+                </param>
+                <param name="base_period_start"
+                       type="text"
+                       optional="true"
+                       label="Base period start (for TX90p, TN10p… YYYY-MM-DD)"
+                       help="Reference period for percentile-based indices. E.g. 1961-01-01." >
+                       <validator type="regex">^(\d{4}-\d{2}-\d{2})?$</validator>
+                </param>
+                <param name="base_period_end"
+                       type="text"
+                       optional="true"
+                       label="Base period end (YYYY-MM-DD)"
+                       help="E.g. 1990-12-31." >
+                       <validator type="regex">^(\d{4}-\d{2}-\d{2})?$</validator>
+                </param>
+                <param name="only_leap_years"
+                       type="boolean"
+                       checked="false"
+                       truevalue="--only-leap-years"
+                       falsevalue=""
+                       label="Leap years only"
+                       help="If enabled, only leap years are taken into account." />
+                <param name="ignore_Feb29th"
+                       type="boolean"
+                       checked="false"
+                       truevalue="--ignore-Feb29th"
+                       falsevalue=""
+                       label="Ignore February 29th"
+                       help="If enabled, February 29th is excluded from all computations." />
+                <param name="save_thresholds"
+                       type="boolean"
+                       checked="false"
+                       truevalue="--save-thresholds"
+                       falsevalue=""
+                       label="Save thresholds in the output file"
+                       help="For indices using percentiles (TX90p, TN10p…)." />
+                <param name="date_event"
+                       type="boolean"
+                       checked="false"
+                       truevalue="--date-event"
+                       falsevalue=""
+                       label="Store extreme event dates" />
+
+                <param name="min_spell_length"
+                       type="integer"
+                       optional="true"
+                       min="1"
+                       label="Minimum spell length"
+                       help="For WSDI, CSDI, CSU, CFD… indices (icclim default: 6)." />
+                <param name="rolling_window_width"
+                       type="integer"
+                       optional="true"
+                       min="1"
+                       label="Rolling window width for percentiles"
+                       help="Window in days centered on each day (icclim default: 5)." />
+                <param name="out_unit"
+                       type="text"
+                       optional="true"
+                       label="Output unit"
+                       help="E.g. 'days', 'percent', 'degC'. Uses the icclim default unit if absent." />
+
+                <!-- rg_0007 : custom threshold for predefined indices -->
+                <param name="threshold"
+                       type="text"
+                       optional="true"
+                       label="Custom threshold (SU, CSU, TR, WSDI, CSDI, TX90p, TG90p, TN90p, TX10p, TG10p, TN10p)"
+                       help="Overrides the default threshold of the index. Must include an operator and pint unit. E.g. '>= 30 degC' for SU (default: > 25 degC).">
+                    <sanitizer sanitize="false"/>
+                </param>
+
+                <!-- rg_0009 : doy_window_width -->
+                <param name="doy_window_width"
+                       type="integer"
+                       optional="true"
+                       min="1"
+                       label="Day-of-year window width for percentiles"
+                       help="Number of days on each side of the current day used to aggregate values when computing percentiles. icclim default: 5." />
+
+                <!-- rg_0014 : interpolation -->
+                <param name="interpolation"
+                       type="select"
+                       optional="true"
+                       label="Percentile interpolation method"
+                       help="Method used to compute reference percentiles. Ignored for non-percentile indices. icclim default: median_unbiased.">
+                    <option value="" selected="true">-- Default (median_unbiased) --</option>
+                    <option value="median_unbiased">median_unbiased — median-unbiased (ECA&amp;D default)</option>
+                    <option value="linear">linear — linear interpolation</option>
+                </param>
+
+            </section>
+
+            </repeat><!-- end inner repeat indices -->
+
+        </repeat><!-- end outer repeat file_groups -->
+
+        <!-- ###################################################################
+             Output mode (applies to the whole job)
+             ################################################################### -->
+        <param name="split_by_file"
+               type="boolean" truevalue="yes" falsevalue="no" checked="false"
+               label="One output file per input file"
+               help="If enabled, icclim is called once per input file instead of passing all files in a group together. Use when files are independent datasets (different sites, models), not a split time series. Produces a collection output." />
+        <param name="split_by_index"
+               type="boolean" truevalue="yes" falsevalue="no" checked="false"
+               label="One output file per index"
+               help="If enabled, each computed index is saved in a separate output file. By default, all indices are merged into a single file. Produces a collection output. WARNING: you MUST enable this option if indices in the same group use different computation frequencies (e.g. Monthly + Annual) — merging datasets with incompatible time coordinates will fail." />
+
+        <!-- ###################################################################
+             Global options (apply to all indices in the job)
+             ################################################################### -->
+        <section name="global_opts" title="Global options" expanded="false">
+            <param name="netcdf_version"
+                   type="select"
+                   label="Output NetCDF format">
+                <option value="NETCDF4" selected="true">NETCDF4</option>
+                <option value="NETCDF4_CLASSIC">NETCDF4_CLASSIC</option>
+                <option value="NETCDF3_CLASSIC">NETCDF3_CLASSIC</option>
+            </param>
+            <param name="logs_verbosity"
+                   type="select"
+                   label="icclim log verbosity">
+                <option value="LOW" selected="true">LOW — minimal</option>
+                <option value="HIGH">HIGH — detailed</option>
+            </param>
+            <param name="sampling_method"
+                   type="select"
+                   label="Temporal sampling method">
+                <option value="resample" selected="true">resample (default)</option>
+                <option value="groupby">groupby</option>
+                <option value="groupby_ref_and_resample_study">groupby_ref_and_resample_study</option>
+            </param>
+        </section>
+
+    </inputs>
+
+    <outputs>
+        <!-- Single output — only when exactly 1 file group AND no split mode -->
+        <data name="output"
+              format="netcdf"
+              label="Computed climate indices (icclim ${tool.version})">
+            <filter>not split_by_file and not split_by_index and len(file_groups) == 1</filter>
+        </data>
+        <!-- Collection output — splits enabled, or multiple file groups -->
+        <collection name="output_collection" type="list"
+                    label="Computed climate indices">
+            <filter>split_by_file or split_by_index or len(file_groups) > 1</filter>
+            <discover_datasets pattern="(?P&lt;name&gt;.+)\.nc"
+                               directory="output_split" format="netcdf" />
+        </collection>
+    </outputs>
+
+    <!-- ####################################################################
+         TESTS
+         Executed with: planemo test (add biocontainers flag for real conditions)
+         Test data generated by: cd test-data and python create_test_data.py
+         #################################################################### -->
+    <tests>
+
+        <!-- Test 01: TG — basic mean temperature, annual -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_TG_annual.nc" compare="sim_size" delta="100"/>
+        </test>
+
+        <!-- Test 02: FD — frost days (tasmin < 0°C), annual -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmin.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="FD"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_FD_annual.nc" compare="sim_size" delta="100"/>
+        </test>
+
+        <!-- Test 03: SU — summer days (tasmax > 25°C), annual -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmax.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="SU"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_SU_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 04: SU with custom threshold '>= 30 degC' -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmax.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="SU"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                    <section name="adv">
+                        <param name="threshold" value=">= 30 degC"/>
+                    </section>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_SU_threshold30.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 05: RR — total precipitation, annual -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_pr.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="RR"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_RR_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 06: TG — seasonal aggregation (JJA) -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="JJA"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_TG_JJA.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 07: TG90p — percentile-based index with base period
+             Mirrors tutorial: tg90p_calculate__subset_and_plot.ipynb -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas_10yr.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG90p"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                    <section name="adv">
+                        <param name="base_period_start" value="1990-01-01"/>
+                        <param name="base_period_end" value="1994-12-31"/>
+                    </section>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_TG90p_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 08: CSDI — spell-type index with min_spell_length parameter
+             Mirrors tutorial: cold_spell_duration.ipynb -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmin.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="CSDI"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                    <section name="adv">
+                        <param name="min_spell_length" value="3"/>
+                        <param name="base_period_start" value="2000-01-01"/>
+                        <param name="base_period_end" value="2001-12-31"/>
+                    </section>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_CSDI_annual.nc" compare="sim_size" delta="100"/>
+        </test>
+
+        <!-- Test 09: Custom index (user_index) — mean temperature
+             CUSTOM is selected in the index_sel conditional to activate user_index params. -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="CUSTOM"/>
+                        <param name="ui_index_name" value="MY_MEAN_TAS"/>
+                        <param name="ui_calc_operation" value="mean"/>
+                        <param name="ui_var_type" value="t"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_custom_mean.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 10: Two independent file groups → collection of 2 separate outputs (no cross-group merge) -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmin.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="FD"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output_collection name="output_collection" type="list" count="2"/>
+        </test>
+
+        <!-- Test 11: DTR — two input files in one group for one index
+             Mirrors tutorial: C3S_climate-index_diurnal_temperature_range_icclim.ipynb
+             DTR requires tasmax AND tasmin simultaneously. -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmax.nc,test_tasmin.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="DTR"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_DTR_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 12: R10mm — heavy precipitation days, annual
+             Mirrors tutorial: C3S_climate-index_heavy_precipitation_icclim.ipynb -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_pr_heavy.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="R10mm"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_R10mm_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 13: SU with JJA seasonal mode
+             Mirrors tutorial: su_summer_days__subset_and_plot.ipynb -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmax.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="SU"/>
+                    </conditional>
+                    <param name="slice_mode" value="JJA"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_SU_JJA.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 14: PRCPTOT — total precipitation on wet days, annual -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_pr.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="PRCPTOT"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_PRCPTOT_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 15: CD — compound index, one group with both tas and pr files -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc,test_pr.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="CD"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_CD_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 16: Two indices on the same file group (TG + FD on the same group)
+             Demonstrates inner repeat: same files, multiple indices merged into one output. -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmin.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TN"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="FD"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf">
+                <assert_contents>
+                    <has_size min="10"/>
+                </assert_contents>
+            </output>
+        </test>
+
+        <!-- Test 17: split_by_index=yes — two indices on same group → collection of 2 files -->
+        <test expect_num_outputs="1">
+            <param name="split_by_index" value="yes"/>
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmin.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TN"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="FD"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output_collection name="output_collection" type="list" count="2"/>
+        </test>
+
+        <!-- Test 18: 1 group, 2 input files = split time series → TG annual 3 years (time concatenation) -->
+        <test expect_num_outputs="1">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas_split1.nc,test_tas_split2.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output name="output" ftype="netcdf"
+                    file="ref_TG_annual.nc" compare="sim_size" delta="10"/>
+        </test>
+
+        <!-- Test 19: split_by_file=yes, split_by_index=no — 1 file per input file (indices merged within each file) -->
+        <test expect_num_outputs="1">
+            <param name="split_by_file" value="yes"/>
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas_split1.nc,test_tas_split2.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output_collection name="output_collection" type="list" count="2"/>
+        </test>
+
+        <!-- Test 20: split_by_file=yes AND split_by_index=yes — 1 file per (input file, index): 2 files × 2 indices = 4 -->
+        <test expect_num_outputs="1">
+            <param name="split_by_file" value="yes"/>
+            <param name="split_by_index" value="yes"/>
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas_split1.nc,test_tas_split2.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="GD4"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+            <output_collection name="output_collection" type="list" count="4"/>
+        </test>
+
+        <!-- Test 21: split_by_index=yes with mixed frequencies (annual + monthly) — safe path, no merge error -->
+        <test expect_num_outputs="1">
+            <param name="split_by_index" value="yes"/>
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="month"/>
+                </repeat>
+            </repeat>
+            <output_collection name="output_collection" type="list" count="2"/>
+        </test>
+
+        <!-- Test 22: mixed frequencies (annual + monthly) without split → merge fails (incompatible time coords) -->
+        <test expect_failure="true">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tas.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="month"/>
+                </repeat>
+            </repeat>
+        </test>
+
+        <!-- Test 23: incompatible files in the same group (tasmax + pr for TG) → icclim crash -->
+        <test expect_failure="true">
+            <repeat name="file_groups">
+                <param name="input_files" value="test_tasmax.nc,test_pr.nc" ftype="netcdf"/>
+                <repeat name="indices">
+                    <conditional name="index_sel">
+                        <param name="index_name" value="TG"/>
+                    </conditional>
+                    <param name="slice_mode" value="year"/>
+                </repeat>
+            </repeat>
+        </test>
+
+    </tests>
+
+    <help><![CDATA[
+
+.. class:: infomark
+
+**What it does**
+
+This tool computes climate indices from daily CF-compliant NetCDF files using
+`icclim <https://icclim.readthedocs.io>`_ (v7). It covers all **ECA&D / ETCCDI**
+temperature, precipitation and snow indices, and lets you define fully custom indices.
+
+Multiple indices can be computed in a single job — click **"Add Index to Compute"**
+to add more. All results are merged into one output NetCDF file.
+
+-----
+
+**Input data requirements**
+
+- Daily NetCDF files following `CF Conventions <https://cfconventions.org/>`_.
+- Typical variable names are detected automatically:
+
+  - ``tas`` / ``t2m`` — mean near-surface air temperature
+  - ``tasmin`` / ``tmin`` — daily minimum temperature
+  - ``tasmax`` / ``tmax`` — daily maximum temperature
+  - ``pr`` / ``precip`` — precipitation flux (kg m⁻² s⁻¹ or mm day⁻¹)
+  - ``snd`` — snow depth
+
+- Select **multiple files** to concatenate a time series split across several files
+  (e.g. one file per decade).
+- Indices that require two variables simultaneously (DTR, vDTR, ETR) need both
+  files — or a single file containing both variables — selected in the same
+  *Input NetCDF file(s)* field.
+
+-----
+
+**Temperature indices**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 15 75
+
+   * - Index
+     - Variable
+     - Description
+   * - TG
+     - tas
+     - Mean value of daily mean temperature
+   * - TN
+     - tasmin
+     - Mean value of daily minimum temperature
+   * - TX
+     - tasmax
+     - Mean value of daily maximum temperature
+   * - TXx / TXn
+     - tasmax
+     - Period maximum / minimum of daily maximum temperature
+   * - TNx / TNn
+     - tasmin
+     - Period maximum / minimum of daily minimum temperature
+   * - FD
+     - tasmin
+     - Frost days — number of days with TN < 0 °C
+   * - CFD
+     - tasmin
+     - Consecutive frost days — length of the longest frost spell
+   * - SU
+     - tasmax
+     - Summer days — number of days with TX > 25 °C (threshold adjustable)
+   * - CSU
+     - tasmax
+     - Consecutive summer days — length of the longest summer-day spell
+   * - ID
+     - tasmax
+     - Ice days — number of days with TX < 0 °C
+   * - TR
+     - tasmin
+     - Tropical nights — number of nights with TN > 20 °C
+   * - GD4
+     - tas
+     - Growing degree days — sum of (TG − 4 °C) for days with TG > 4 °C
+   * - HD17
+     - tas
+     - Heating degree days — sum of (17 °C − TG) for days with TG < 17 °C
+   * - TG10p / TG90p
+     - tas
+     - Percentage of days with TG below the 10th / above the 90th percentile
+   * - TN10p / TN90p
+     - tasmin
+     - Percentage of days with TN below the 10th / above the 90th percentile
+   * - TX10p / TX90p
+     - tasmax
+     - Percentage of days with TX below the 10th / above the 90th percentile
+   * - WSDI
+     - tasmax
+     - Warm Spell Duration Index — number of days in TX90p spells ≥ 6 days
+   * - CSDI
+     - tasmin
+     - Cold Spell Duration Index — number of days in TN10p spells ≥ 6 days
+   * - DTR
+     - tasmax + tasmin
+     - Mean diurnal temperature range: mean(TX − TN)
+   * - ETR
+     - tasmax + tasmin
+     - Intra-period extreme temperature range: max(TX) − min(TN)
+   * - vDTR
+     - tasmax + tasmin
+     - Variability of DTR: mean absolute day-to-day change in DTR
+
+-----
+
+**Precipitation indices**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 12 88
+
+   * - Index
+     - Description
+   * - RR
+     - Total precipitation amount
+   * - RR1
+     - Wet days — number of days with RR ≥ 1 mm
+   * - SDII
+     - Simple daily intensity index — mean precipitation on wet days
+   * - CWD
+     - Consecutive wet days — longest wet spell (RR ≥ 1 mm)
+   * - CDD
+     - Consecutive dry days — longest dry spell (RR < 1 mm)
+   * - R10mm
+     - Heavy precipitation days — number of days with RR ≥ 10 mm
+   * - R20mm
+     - Very heavy precipitation days — number of days with RR ≥ 20 mm
+   * - RX1day
+     - Maximum 1-day precipitation amount
+   * - RX5day
+     - Maximum consecutive 5-day precipitation amount
+   * - R75p / R95p / R99p
+     - Very / extremely / ultra-extremely wet days (above 75th / 95th / 99th percentile)
+   * - R75pTOT / R95pTOT / R99pTOT
+     - Fraction of total precipitation from very / extremely / ultra-extremely wet days
+
+-----
+
+**Snow indices**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 12 88
+
+   * - Index
+     - Description
+   * - SD
+     - Mean snow depth
+   * - SD1
+     - Snow days — number of days with snow depth ≥ 1 cm
+   * - SD5cm
+     - Number of days with snow depth ≥ 5 cm
+   * - SD50cm
+     - Number of days with snow depth ≥ 50 cm
+
+-----
+
+**Computation frequency**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Value
+     - Description
+   * - Annual
+     - One value per calendar year
+   * - Monthly
+     - One value per calendar month (12 time steps per year)
+   * - DJF
+     - Boreal winter — December, January, February
+   * - MAM
+     - Boreal spring — March, April, May
+   * - JJA
+     - Boreal summer — June, July, August
+   * - SON
+     - Boreal autumn — September, October, November
+   * - ONDJFM
+     - Winter half-year — October through March
+   * - AMJJAS
+     - Summer half-year — April through September
+
+-----
+
+**Advanced parameters**
+
+*Time range* — Restrict the computation to a sub-period of the input data
+(e.g. ``1981-01-01`` to ``2010-12-31``). Both start and end must be set together.
+
+*Base period* — For percentile-based indices (TG90p, TN10p, TX90p, etc.) this
+defines the reference climatology used to compute the percentile thresholds
+(e.g. ``1961-01-01`` / ``1990-12-31`` for the standard WMO reference period).
+
+*Custom threshold* — Overrides the default threshold of an index. The value must
+include a comparison operator and a `pint <https://pint.readthedocs.io>`_-compatible
+unit string. Examples:
+
+- ``>= 30 degC``  →  SU with a heat-wave threshold of 30 °C instead of 25 °C
+- ``> 20 mm``     →  R20mm-style custom heavy rain threshold
+
+*Minimum spell length* — Minimum number of consecutive days required to count a
+spell (used by WSDI, CSDI, CSU, CFD). Default: 6.
+
+*Rolling window width for percentiles* — Number of days on each side of a given
+calendar day used to pool values when computing the reference percentile
+(e.g. a width of 5 uses a 11-day window). Default: 5.
+
+*Day-of-year window width* — Similar to the rolling window; controls how many
+surrounding days contribute to each daily percentile estimate. Default: 5.
+
+*Percentile interpolation method* — Algorithm used to interpolate order statistics.
+``median_unbiased`` (default) corresponds to the ECA&D standard; ``linear`` is the
+classical NumPy default.
+
+-----
+
+**Custom index (user_index)**
+
+Enable *"Yes — define a custom index"* to compute an index that is not part of the
+ECA&D catalogue. Parameters:
+
+- **Index name** — Free label written to the output NetCDF variable.
+- **Operation** — Statistical operation: ``mean``, ``sum``, ``max``, ``min``,
+  ``nb_events`` (count), ``max_nb_consecutive_events`` (longest spell),
+  ``run_mean`` / ``run_sum`` (running statistics), or ``anomaly``.
+- **Variable type** — Helps icclim apply the correct unit conversion (``t`` for
+  temperature, ``p`` for precipitation).
+- **Threshold** — Value against which each day is compared (e.g. ``25 degC``).
+  Required for ``nb_events`` and ``max_nb_consecutive_events``.
+- **Logical operator** — Comparison applied to the threshold (``gt``, ``lt``,
+  ``get``, ``let``, ``e``).
+- **Multiplicative coefficient** — Applied to the variable before computation
+  (e.g. ``0.001`` to convert mm to m).
+- **Rolling window width** — Window size in days for ``run_mean`` / ``run_sum``.
+- **Reference period** — Start / end dates defining the climatological baseline
+  for the ``anomaly`` operation.
+
+-----
+
+**Outputs**
+
+A single NetCDF4 file containing all requested indices as separate variables, with
+full CF metadata (units, long_name, cell_methods).
+(Note: NetCDF format can also be NetCDF 3 if selected in options)
+
+-----
+
+**References**
+
+- icclim documentation: https://icclim.readthedocs.io
+- ECA&D index definitions: https://www.ecad.eu/documents/atbd.pdf
+- CF Conventions: https://cfconventions.org/
+
+    ]]></help>
+
+    <citations>
+        <citation type="doi">10.5194/gmd-14-1003-2021</citation>
+    </citations>
+    
+    <creator>
+        <person givenName="Pauline" familyName="Seguineau" url="https://orcid.org/0009-0009-5969-8478"/>
+        <organization name="PNDB" url="https://www.pndb.fr/pages/accueil/"/>
+        <organization name="Data Terra" url="https://www.data-terra.org/"/>
+    </creator>
+
+</tool>

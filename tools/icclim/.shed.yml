@@ -1,0 +1,14 @@
+name: icclim_climate_indices
+owner: climate
+description: >
+  Compute climate indices (ECA&D, ETCCDI) and custom indices
+  from CF-compliant NetCDF files using the icclim Python package.
+long_description: |
+  This tool integrates icclim (Indice Calculation CLIMate) into Galaxy.
+  Developed for MNHN/PNDB — FAIR principles compliant.
+  Supports standard ECA&D/ETCCDI indices and user-defined custom indices.
+homepage_url: https://icclim.readthedocs.io
+remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/icclim
+type: unrestricted
+categories:
+  - Climate Analysis
