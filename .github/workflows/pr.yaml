@@ -407,7 +407,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [setup, lint, combine_outputs]
-    if: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'NordicESMHub' }}
+    if: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'earth-data-community' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
