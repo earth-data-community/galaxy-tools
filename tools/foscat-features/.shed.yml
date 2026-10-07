@@ -1,0 +1,26 @@
+categories:
+- Machine Learning
+- Imaging
+- Statistics
+description: Multi-scale scattering feature extraction from RGB images using FOSCAT (Delouis et al. 2022)
+homepage_url: https://github.com/jmdelouis/FOSCAT
+long_description: |
+  Galaxy tool that extracts multi-scale scattering-transform features from
+  RGB images using FOSCAT (Delouis et al. 2022). For each input image,
+  the tool resizes to a target square size, runs the scattering transform
+  per RGB channel, and concatenates the resulting statistics
+  (S0, S1, S2, P00, P11, P01 where available) into a single feature
+  vector. Output is a single NPZ holding the feature matrix, labels from
+  the split file, and the resolved image paths. With the default
+  NORIENT=8, KERNELSZ=3, target_size=64, the per-image feature dimension
+  is 246 (3 channels x 82 statistics) — matching the FIESTA-bio chain.
+  Originally developed for the FIESTA-OSCARS plankton-classification
+  chain (fiesta-scattering-bio), but the tool is dataset-agnostic — any
+  RGB image classification problem can use this feature representation.
+  Dataset download, split-file generation, and class-balanced
+  sub-sampling all live at the workflow level (WorkflowHub), not in this
+  tool.
+name: foscat_features
+owner: annefou
+remote_repository_url: https://github.com/NordicESMhub/galaxy-tools/tree/master/tools/foscat-features
+type: unrestricted
