@@ -1,0 +1,11 @@
+# Development environment for Galaxy tool authoring (FIESTA scattering tools).
+# Python 3.11 venv (not micromamba — codesign errors on Apple Silicon).
+#
+# One-time setup:
+#   /opt/homebrew/bin/python3.11 -m venv ../galaxy-tools-dev-env
+#   ../galaxy-tools-dev-env/bin/pip install -r requirements-dev.txt
+#   source ../galaxy-tools-dev-env/bin/activate
+
+planemo
+nb2workflow[galaxy]
+jupyterlab
