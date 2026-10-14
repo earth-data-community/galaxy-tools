@@ -1,0 +1,444 @@
+<tool id="icenet_forecast" name="Icenet Forecast" version="0.1.0+galaxy0" profile="21.05">
+    <description>for forecasting sea ice concentration with IceNet</description>
+        <requirements>
+            <requirement type="package" version= "3.10.9">python</requirement>
+            <requirement type="package" version="2023.1.0">xarray</requirement>
+            <requirement type="package" version="1.24.2">numpy</requirement>
+            <requirement type="package" version="1.5.3">pandas</requirement>
+            <requirement type="package" version="1.10.0">scipy</requirement>
+            <requirement type="package" version="3.4.0">iris</requirement>
+            <requirement type="package" version="1.6.0">netcdf4</requirement>
+            <requirement type="package" version="2.15.0">imageio</requirement>
+            <requirement type="package" version="3.6.3">matplotlib</requirement>
+            <requirement type="package" version="4.64.1">tqdm</requirement>
+            <requirement type="package" version="0.5.1">cdsapi</requirement>
+            <requirement type="package" version="2.10">tensorflow</requirement>
+        </requirements>
+        <command detect_errors="exit_code"><![CDATA[
+            mkdir -p 'data/network_datasets/dataset1/obs/siconca/abs' &&
+            mkdir 'data/network_datasets/dataset1/obs/siconca/linear_trend' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/ta500/anom' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/psl/anom' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/rsds/anom' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/rsus/anom' &&
+            mkdir -p 'data/network_datasets/dataset1/obs/tas/anom' &&  
+            mkdir -p 'data/network_datasets/dataset1/obs/tos/anom' &&
+            mkdir -p 'data/network_datasets/dataset1/obs/ua10/abs' &&  
+            mkdir -p 'data/network_datasets/dataset1/obs/uas/abs' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/vas/abs' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/zg250/anom' && 
+            mkdir -p 'data/network_datasets/dataset1/obs/zg500/anom' && 
+            cp -r '$__tool_directory__/masks' 'data/' && 
+            cp -r '$__tool_directory__/meta' 'data/network_datasets/dataset1/' &&
+            #for $obs in $siconca_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/siconca/abs/${obs.element_identifier}';
+            #end for#
+            #for $obs in $linear_trend_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/siconca/linear_trend/${obs.element_identifier}';
+            #end for#
+            #for $obs in $tas_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/tas/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $ta500_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/ta500/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $tos_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/tos/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $rsds_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/rsds/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $rsus_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/rsus/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $psl_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/psl/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $zg500_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/zg500/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $zg250_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/zg250/anom/${obs.element_identifier}';
+            #end for#
+            #for $obs in $ua10_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/ua10/abs/${obs.element_identifier}';
+            #end for#
+            #for $obs in $uas_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/uas/abs/${obs.element_identifier}';
+            #end for#
+            #for $obs in $vas_dataset#
+              ln -s '$obs' 'data/network_datasets/dataset1/obs/vas/abs/${obs.element_identifier}';
+            #end for#
+            python3 '$__tool_directory__/forecast.py' --siconca '$siconca_file' --config '$__tool_directory__/2021_09_03_1300_icenet_config.json' --models "${",".join(map(str, $models))}" --forecast_start '$forecast_start' --forecast_end '$forecast_end' 
+        ]]></command>
+        <inputs>
+            <param name="forecast_start" type="text"  label="Forecast start date" help="date must have the format yyyy-mm-dd" optional="False"/>
+            <param name="forecast_end" type="text"  label="Forecast end date" help="date must have the format yyyy-mm-dd" optional="False"/>
+            <param name="siconca_file" type="data" label="Monthly averaged OSI-SAF sea ice concentration data " format="netcdf" help="generated with the Preprocess Icenet Data Tool"/>
+            <param name="models" type="data_collection" label="pretrained IceNet ensemble members" help="IceNet consists of 25 ensemble members, this tool is tested with 3 models: 36, 42, 53, which can be downloaded from the Polar Data Centre https://data.bas.ac.uk/full-record.php?id=GB/NERC/BAS/PDC/01526"/>
+            <param name="siconca_dataset" type="data_collection" label="Monthly averaged OSI-SAF sea ice concentration data" help="preprocessed with the Preprocess Icenet Data Tool"/>
+            <param name="linear_trend_dataset" type="data_collection" label="Linear Trend Forecast" help="calculated with the Preprocess Icenet Data Tool"/>
+            <param name="tas_dataset" type="data_collection" label="Monthly averaged ERA5 2m temperature data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="ta500_dataset" type="data_collection" label="Monthly averaged ERA5 pressure level 500 temperature data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="tos_dataset" type="data_collection" label="Monthly averaged ERA5 sea surface temperature data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="rsds_dataset" type="data_collection" label="Monthly averaged ERA5 surface solar radiation downwards data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="rsus_dataset" type="data_collection" label="Monthly averaged ERA5 surface net solar radiation data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="psl_dataset" type="data_collection" label="Monthly averaged ERA5 mean sea level pressure data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="zg500_dataset" type="data_collection" label="Monthly averaged pressure level 500 geopotential data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="zg250_dataset" type="data_collection" label="Monthly averaged ERA5 pressure level 250 geopotential data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="ua10_dataset" type="data_collection" label="Monthly averaged ERA5 pressure level 10 u component of wind data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="uas_dataset" type="data_collection" label="Monthly averaged ERA5 10m u component of wind data" help= "generated with the Preprocess Icenet Data Tool"/>
+            <param name="vas_dataset" type="data_collection" label="Monthly averaged ERA5 10m v component of wind data" help= "generated with the Preprocess Icenet Data Tool"/>  
+        </inputs>
+        <outputs>
+            <data name="icenet_forecast" format="netcdf" from_work_dir="data/forecasts/icenet/2021_09_03_1300_icenet_demo/IceNet/icenet_forecasts.nc"/>
+        </outputs>
+    <tests>
+    <!--
+        <test>
+            <param name="forecast_start" value= "2020-01-01"/>
+            <param name="forecast_end" value= "2020-12-01"/>
+            <param name="observations">
+               <collection type="list">
+                  <element name="obs/psl/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_04.npy" />
+                  <element name="obs/psl/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_05.npy" />
+                  <element name="obs/psl/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_06.npy" />
+                  <element name="obs/psl/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_07.npy" />
+                  <element name="obs/psl/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_08.npy" />
+                  <element name="obs/psl/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_09.npy" />
+                  <element name="obs/psl/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_10.npy" />
+                  <element name="obs/psl/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_11.npy" />
+                  <element name="obs/psl/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/psl/anom/2019_12.npy" />
+                  <element name="obs/psl/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_01.npy" />
+                  <element name="obs/psl/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_02.npy" />
+                  <element name="obs/psl/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_03.npy" />
+                  <element name="obs/psl/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_04.npy" />
+                  <element name="obs/psl/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_05.npy" />
+                  <element name="obs/psl/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_06.npy" />
+                  <element name="obs/psl/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_07.npy" />
+                  <element name="obs/psl/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_08.npy" />
+                  <element name="obs/psl/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_09.npy" />
+                  <element name="obs/psl/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_10.npy" />
+                  <element name="obs/psl/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_11.npy" />
+                  <element name="obs/psl/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/psl/anom/2020_12.npy" />
+                  
+                  <element name="obs/rsds/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_04.npy" />
+                  <element name="obs/rsds/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_05.npy" />
+                  <element name="obs/rsds/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_06.npy" />
+                  <element name="obs/rsds/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_07.npy" />
+                  <element name="obs/rsds/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_08.npy" />
+                  <element name="obs/rsds/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_09.npy" />
+                  <element name="obs/rsds/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_10.npy" />
+                  <element name="obs/rsds/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_11.npy" />
+                  <element name="obs/rsds/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2019_12.npy" />
+                  <element name="obs/rsds/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_01.npy" />
+                  <element name="obs/rsds/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_02.npy" />
+                  <element name="obs/rsds/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_03.npy" />
+                  <element name="obs/rsds/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_04.npy" />
+                  <element name="obs/rsds/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_05.npy" />
+                  <element name="obs/rsds/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_06.npy" />
+                  <element name="obs/rsds/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_07.npy" />
+                  <element name="obs/rsds/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_08.npy" />
+                  <element name="obs/rsds/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_09.npy" />
+                  <element name="obs/rsds/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_10.npy" />
+                  <element name="obs/rsds/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_11.npy" />
+                  <element name="obs/rsds/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/rsds/anom/2020_12.npy" />
+                  
+                  <element name="obs/rsus/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_04.npy" />
+                  <element name="obs/rsus/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_05.npy" />
+                  <element name="obs/rsus/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_06.npy" />
+                  <element name="obs/rsus/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_07.npy" />
+                  <element name="obs/rsus/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_08.npy" />
+                  <element name="obs/rsus/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_09.npy" />
+                  <element name="obs/rsus/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_10.npy" />
+                  <element name="obs/rsus/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_11.npy" />
+                  <element name="obs/rsus/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2019_12.npy" />
+                  <element name="obs/rsus/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_01.npy" />
+                  <element name="obs/rsus/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_02.npy" />
+                  <element name="obs/rsus/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_03.npy" />
+                  <element name="obs/rsus/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_04.npy" />
+                  <element name="obs/rsus/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_05.npy" />
+                  <element name="obs/rsus/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_06.npy" />
+                  <element name="obs/rsus/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_07.npy" />
+                  <element name="obs/rsus/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_08.npy" />
+                  <element name="obs/rsus/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_09.npy" />
+                  <element name="obs/rsus/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_10.npy" />
+                  <element name="obs/rsus/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_11.npy" />
+                  <element name="obs/rsus/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/rsus/anom/2020_12.npy" />
+                  
+                  <element name="obs/ta500/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_04.npy" />
+                  <element name="obs/ta500/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_05.npy" />
+                  <element name="obs/ta500/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_06.npy" />
+                  <element name="obs/ta500/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_07.npy" />
+                  <element name="obs/ta500/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_08.npy" />
+                  <element name="obs/ta500/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_09.npy" />
+                  <element name="obs/ta500/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_10.npy" />
+                  <element name="obs/ta500/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_11.npy" />
+                  <element name="obs/ta500/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2019_12.npy" />
+                  <element name="obs/ta500/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_01.npy" />
+                  <element name="obs/ta500/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_02.npy" />
+                  <element name="obs/ta500/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_03.npy" />
+                  <element name="obs/ta500/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_04.npy" />
+                  <element name="obs/ta500/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_05.npy" />
+                  <element name="obs/ta500/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_06.npy" />
+                  <element name="obs/ta500/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_07.npy" />
+                  <element name="obs/ta500/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_08.npy" />
+                  <element name="obs/ta500/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_09.npy" />
+                  <element name="obs/ta500/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_10.npy" />
+                  <element name="obs/ta500/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_11.npy" />
+                  <element name="obs/ta500/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/ta500/anom/2020_12.npy" />
+                  
+                  <element name="obs/tas/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_04.npy" />
+                  <element name="obs/tas/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_05.npy" />
+                  <element name="obs/tas/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_06.npy" />
+                  <element name="obs/tas/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_07.npy" />
+                  <element name="obs/tas/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_08.npy" />
+                  <element name="obs/tas/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_09.npy" />
+                  <element name="obs/tas/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_10.npy" />
+                  <element name="obs/tas/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_11.npy" />
+                  <element name="obs/tas/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/tas/anom/2019_12.npy" />
+                  <element name="obs/tas/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_01.npy" />
+                  <element name="obs/tas/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_02.npy" />
+                  <element name="obs/tas/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_03.npy" />
+                  <element name="obs/tas/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_04.npy" />
+                  <element name="obs/tas/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_05.npy" />
+                  <element name="obs/tas/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_06.npy" />
+                  <element name="obs/tas/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_07.npy" />
+                  <element name="obs/tas/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_08.npy" />
+                  <element name="obs/tas/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_09.npy" />
+                  <element name="obs/tas/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_10.npy" />
+                  <element name="obs/tas/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_11.npy" />
+                  <element name="obs/tas/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/tas/anom/2020_12.npy" />
+                  
+                  <element name="obs/tos/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_04.npy" />
+                  <element name="obs/tos/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_05.npy" />
+                  <element name="obs/tos/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_06.npy" />
+                  <element name="obs/tos/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_07.npy" />
+                  <element name="obs/tos/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_08.npy" />
+                  <element name="obs/tos/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_09.npy" />
+                  <element name="obs/tos/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_10.npy" />
+                  <element name="obs/tos/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_11.npy" />
+                  <element name="obs/tos/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/tos/anom/2019_12.npy" />
+                  <element name="obs/tos/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_01.npy" />
+                  <element name="obs/tos/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_02.npy" />
+                  <element name="obs/tos/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_03.npy" />
+                  <element name="obs/tos/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_04.npy" />
+                  <element name="obs/tos/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_05.npy" />
+                  <element name="obs/tos/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_06.npy" />
+                  <element name="obs/tos/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_07.npy" />
+                  <element name="obs/tos/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_08.npy" />
+                  <element name="obs/tos/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_09.npy" />
+                  <element name="obs/tos/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_10.npy" />
+                  <element name="obs/tos/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_11.npy" />
+                  <element name="obs/tos/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/tos/anom/2020_12.npy" />
+                  
+                  <element name="obs/zg250/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_04.npy" />
+                  <element name="obs/zg250/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_05.npy" />
+                  <element name="obs/zg250/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_06.npy" />
+                  <element name="obs/zg250/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_07.npy" />
+                  <element name="obs/zg250/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_08.npy" />
+                  <element name="obs/zg250/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_09.npy" />
+                  <element name="obs/zg250/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_10.npy" />
+                  <element name="obs/zg250/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_11.npy" />
+                  <element name="obs/zg250/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2019_12.npy" />
+                  <element name="obs/zg250/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_01.npy" />
+                  <element name="obs/zg250/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_02.npy" />
+                  <element name="obs/zg250/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_03.npy" />
+                  <element name="obs/zg250/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_04.npy" />
+                  <element name="obs/zg250/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_05.npy" />
+                  <element name="obs/zg250/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_06.npy" />
+                  <element name="obs/zg250/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_07.npy" />
+                  <element name="obs/zg250/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_08.npy" />
+                  <element name="obs/zg250/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_09.npy" />
+                  <element name="obs/zg250/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_10.npy" />
+                  <element name="obs/zg250/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_11.npy" />
+                  <element name="obs/zg250/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/zg250/anom/2020_12.npy" />
+                  
+                  <element name="obs/zg500/anom/2019_04.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_04.npy" />
+                  <element name="obs/zg500/anom/2019_05.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_05.npy" />
+                  <element name="obs/zg500/anom/2019_06.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_06.npy" />
+                  <element name="obs/zg500/anom/2019_07.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_07.npy" />
+                  <element name="obs/zg500/anom/2019_08.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_08.npy" />
+                  <element name="obs/zg500/anom/2019_09.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_09.npy" />
+                  <element name="obs/zg500/anom/2019_10.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_10.npy" />
+                  <element name="obs/zg500/anom/2019_11.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_11.npy" />
+                  <element name="obs/zg500/anom/2019_12.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2019_12.npy" />
+                  <element name="obs/zg500/anom/2020_01.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_01.npy" />
+                  <element name="obs/zg500/anom/2020_02.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_02.npy" />
+                  <element name="obs/zg500/anom/2020_03.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_03.npy" />
+                  <element name="obs/zg500/anom/2020_04.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_04.npy" />
+                  <element name="obs/zg500/anom/2020_05.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_05.npy" />
+                  <element name="obs/zg500/anom/2020_06.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_06.npy" />
+                  <element name="obs/zg500/anom/2020_07.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_07.npy" />
+                  <element name="obs/zg500/anom/2020_08.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_08.npy" />
+                  <element name="obs/zg500/anom/2020_09.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_09.npy" />
+                  <element name="obs/zg500/anom/2020_10.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_10.npy" />
+                  <element name="obs/zg500/anom/2020_11.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_11.npy" />
+                  <element name="obs/zg500/anom/2020_12.npy" value="data/network_datasets/dataset1/obs/zg500/anom/2020_12.npy" />
+                  
+                  <element name="obs/ua10/abs/2019_04.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_04.npy" />
+                  <element name="obs/ua10/abs/2019_05.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_05.npy" />
+                  <element name="obs/ua10/abs/2019_06.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_06.npy" />
+                  <element name="obs/ua10/abs/2019_07.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_07.npy" />
+                  <element name="obs/ua10/abs/2019_08.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_08.npy" />
+                  <element name="obs/ua10/abs/2019_09.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_09.npy" />
+                  <element name="obs/ua10/abs/2019_10.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_10.npy" />
+                  <element name="obs/ua10/abs/2019_11.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_11.npy" />
+                  <element name="obs/ua10/abs/2019_12.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2019_12.npy" />
+                  <element name="obs/ua10/abs/2020_01.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_01.npy" />
+                  <element name="obs/ua10/abs/2020_02.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_02.npy" />
+                  <element name="obs/ua10/abs/2020_03.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_03.npy" />
+                  <element name="obs/ua10/abs/2020_04.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_04.npy" />
+                  <element name="obs/ua10/abs/2020_05.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_05.npy" />
+                  <element name="obs/ua10/abs/2020_06.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_06.npy" />
+                  <element name="obs/ua10/abs/2020_07.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_07.npy" />
+                  <element name="obs/ua10/abs/2020_08.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_08.npy" />
+                  <element name="obs/ua10/abs/2020_09.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_09.npy" />
+                  <element name="obs/ua10/abs/2020_10.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_10.npy" />
+                  <element name="obs/ua10/abs/2020_11.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_11.npy" />
+                  <element name="obs/ua10/abs/2020_12.npy" value="data/network_datasets/dataset1/obs/ua10/abs/2020_12.npy" />
+                  
+                  <element name="obs/uas/abs/2019_04.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_04.npy" />
+                  <element name="obs/uas/abs/2019_05.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_05.npy" />
+                  <element name="obs/uas/abs/2019_06.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_06.npy" />
+                  <element name="obs/uas/abs/2019_07.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_07.npy" />
+                  <element name="obs/uas/abs/2019_08.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_08.npy" />
+                  <element name="obs/uas/abs/2019_09.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_09.npy" />
+                  <element name="obs/uas/abs/2019_10.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_10.npy" />
+                  <element name="obs/uas/abs/2019_11.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_11.npy" />
+                  <element name="obs/uas/abs/2019_12.npy" value="data/network_datasets/dataset1/obs/uas/abs/2019_12.npy" />
+                  <element name="obs/uas/abs/2020_01.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_01.npy" />
+                  <element name="obs/uas/abs/2020_02.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_02.npy" />
+                  <element name="obs/uas/abs/2020_03.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_03.npy" />
+                  <element name="obs/uas/abs/2020_04.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_04.npy" />
+                  <element name="obs/uas/abs/2020_05.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_05.npy" />
+                  <element name="obs/uas/abs/2020_06.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_06.npy" />
+                  <element name="obs/uas/abs/2020_07.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_07.npy" />
+                  <element name="obs/uas/abs/2020_08.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_08.npy" />
+                  <element name="obs/uas/abs/2020_09.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_09.npy" />
+                  <element name="obs/uas/abs/2020_10.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_10.npy" />
+                  <element name="obs/uas/abs/2020_11.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_11.npy" />
+                  <element name="obs/uas/abs/2020_12.npy" value="data/network_datasets/dataset1/obs/uas/abs/2020_12.npy" />
+                  
+                  <element name="obs/vas/abs/2019_04.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_04.npy" />
+                  <element name="obs/vas/abs/2019_05.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_05.npy" />
+                  <element name="obs/vas/abs/2019_06.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_06.npy" />
+                  <element name="obs/vas/abs/2019_07.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_07.npy" />
+                  <element name="obs/vas/abs/2019_08.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_08.npy" />
+                  <element name="obs/vas/abs/2019_09.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_09.npy" />
+                  <element name="obs/vas/abs/2019_10.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_10.npy" />
+                  <element name="obs/vas/abs/2019_11.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_11.npy" />
+                  <element name="obs/vas/abs/2019_12.npy" value="data/network_datasets/dataset1/obs/vas/abs/2019_12.npy" />
+                  <element name="obs/vas/abs/2020_01.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_01.npy" />
+                  <element name="obs/vas/abs/2020_02.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_02.npy" />
+                  <element name="obs/vas/abs/2020_03.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_03.npy" />
+                  <element name="obs/vas/abs/2020_04.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_04.npy" />
+                  <element name="obs/vas/abs/2020_05.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_05.npy" />
+                  <element name="obs/vas/abs/2020_06.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_06.npy" />
+                  <element name="obs/vas/abs/2020_07.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_07.npy" />
+                  <element name="obs/vas/abs/2020_08.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_08.npy" />
+                  <element name="obs/vas/abs/2020_09.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_09.npy" />
+                  <element name="obs/vas/abs/2020_10.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_10.npy" />
+                  <element name="obs/vas/abs/2020_11.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_11.npy" />
+                  <element name="obs/vas/abs/2020_12.npy" value="data/network_datasets/dataset1/obs/vas/abs/2020_12.npy" />
+                  
+                  <element name="obs/siconca/abs/2018_07.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2018_07.npy" />
+                  <element name="obs/siconca/abs/2018_08.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2018_08.npy" />
+                  <element name="obs/siconca/abs/2018_09.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2018_09.npy" />
+                  <element name="obs/siconca/abs/2018_10.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2018_10.npy" />
+                  <element name="obs/siconca/abs/2018_11.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2018_11.npy" />
+                  <element name="obs/siconca/abs/2018_12.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2018_12.npy" />
+                  <element name="obs/siconca/abs/2019_01.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_01.npy" />
+                  <element name="obs/siconca/abs/2019_02.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_02.npy" />
+                  <element name="obs/siconca/abs/2019_03.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_03.npy" />
+                  <element name="obs/siconca/abs/2019_04.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_04.npy" />
+                  <element name="obs/siconca/abs/2019_05.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_05.npy" />
+                  <element name="obs/siconca/abs/2019_06.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_06.npy" />
+                  <element name="obs/siconca/abs/2019_07.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_07.npy" />
+                  <element name="obs/siconca/abs/2019_08.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_08.npy" />
+                  <element name="obs/siconca/abs/2019_09.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_09.npy" />
+                  <element name="obs/siconca/abs/2019_10.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_10.npy" />
+                  <element name="obs/siconca/abs/2019_11.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_11.npy" />
+                  <element name="obs/siconca/abs/2019_12.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2019_12.npy" />
+                  <element name="obs/siconca/abs/2020_01.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_01.npy" />
+                  <element name="obs/siconca/abs/2020_02.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_02.npy" />
+                  <element name="obs/siconca/abs/2020_03.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_03.npy" />
+                  <element name="obs/siconca/abs/2020_04.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_04.npy" />
+                  <element name="obs/siconca/abs/2020_05.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_05.npy" />
+                  <element name="obs/siconca/abs/2020_06.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_06.npy" />
+                  <element name="obs/siconca/abs/2020_07.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_07.npy" />
+                  <element name="obs/siconca/abs/2020_08.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_08.npy" />
+                  <element name="obs/siconca/abs/2020_09.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_09.npy" />
+                  <element name="obs/siconca/abs/2020_10.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_10.npy" />
+                  <element name="obs/siconca/abs/2020_11.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_11.npy" />
+                  <element name="obs/siconca/abs/2020_12.npy" value="data/network_datasets/dataset1/obs/siconca/abs/2020_12.npy" />
+                  
+                  <element name="obs/siconca/linear_trend/2019_06.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_06.npy" />
+                  <element name="obs/siconca/linear_trend/2019_07.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_07.npy" />
+                  <element name="obs/siconca/linear_trend/2019_08.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_08.npy" />
+                  <element name="obs/siconca/linear_trend/2019_09.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_09.npy" />
+                  <element name="obs/siconca/linear_trend/2019_10.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_10.npy" />
+                  <element name="obs/siconca/linear_trend/2019_11.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_11.npy" />
+                  <element name="obs/siconca/linear_trend/2019_12.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2019_12.npy" />
+                  <element name="obs/siconca/linear_trend/2020_01.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_01.npy" />
+                  <element name="obs/siconca/linear_trend/2020_02.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_02.npy" />
+                  <element name="obs/siconca/linear_trend/2020_03.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_03.npy" />
+                  <element name="obs/siconca/linear_trend/2020_04.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_04.npy" />
+                  <element name="obs/siconca/linear_trend/2020_05.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_05.npy" />
+                  <element name="obs/siconca/linear_trend/2020_06.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_06.npy" />
+                  <element name="obs/siconca/linear_trend/2020_07.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_07.npy" />
+                  <element name="obs/siconca/linear_trend/2020_08.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_08.npy" />
+                  <element name="obs/siconca/linear_trend/2020_09.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_09.npy" />
+                  <element name="obs/siconca/linear_trend/2020_10.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_10.npy" />
+                  <element name="obs/siconca/linear_trend/2020_11.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_11.npy" />
+                  <element name="obs/siconca/linear_trend/2020_12.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2020_12.npy" />
+                  <element name="obs/siconca/linear_trend/2021_01.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_01.npy" />
+                  <element name="obs/siconca/linear_trend/2021_02.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_02.npy" />
+                  <element name="obs/siconca/linear_trend/2021_03.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_03.npy" />
+                  <element name="obs/siconca/linear_trend/2021_04.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_04.npy" />
+                  <element name="obs/siconca/linear_trend/2021_05.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_05.npy" />
+                  <element name="obs/siconca/linear_trend/2021_06.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_06.npy" />
+                  <element name="obs/siconca/linear_trend/2021_07.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_07.npy" />
+                  <element name="obs/siconca/linear_trend/2021_08.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_08.npy" />
+                  <element name="obs/siconca/linear_trend/2021_09.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_09.npy" />
+                  <element name="obs/siconca/linear_trend/2021_10.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_10.npy" />
+                  <element name="obs/siconca/linear_trend/2021_11.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_11.npy" />
+                  <element name="obs/siconca/linear_trend/2021_12.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2021_12.npy" />
+                  <element name="obs/siconca/linear_trend/2022_01.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_01.npy" />
+                  <element name="obs/siconca/linear_trend/2022_02.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_02.npy" />
+                  <element name="obs/siconca/linear_trend/2022_03.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_03.npy" />
+                  <element name="obs/siconca/linear_trend/2022_04.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_04.npy" />
+                  <element name="obs/siconca/linear_trend/2022_05.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_05.npy" />
+                  <element name="obs/siconca/linear_trend/2022_06.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_06.npy" />
+                  <element name="obs/siconca/linear_trend/2022_07.npy" value="data/network_datasets/dataset1/obs/siconca/linear_trend/2022_07.npy" />                
+               </collection>
+            </param>
+            
+            <param name="models">
+               <collection type="list">
+                  <element name="model1" value="network_tempscaled_36.h5" />
+                  <element name="model2" value="network_tempscaled_42.h5" />
+                  <element name="model3" value="network_tempscaled_53.h5" />
+               </collection>
+            </param>
+            <param name="config_file" value="2021_09_03_1300_icenet_demo.json"/>
+            <param name="siconca_file" value="siconca_EASE.nc"/>
+            <output_collection name="icenet_forecast">
+                <element name="icenet_forecasts">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+        </test>
+        -->
+    </tests>
+    <help><![CDATA[
+    
+            This tool is a wrapper to forecast sea ice concentration with IceNet. IceNet is a probabilistic, deep learning sea ice forecasting system. It consists of an ensemble of U-Net networks, which learns how sea ice changes from climate simulations and observational data to forecast up to 6 months of monthly-averaged sea ice concentration maps at 25 km resolution. It takes pretrained IceNet models downloaded from the Polar Data Centre and Observational Data generated with the "Preprocess Icenet Data Tool" as an input and creates one netcdf forecast file as an output. 
+    ]]></help>
+    <citations>
+       <citation type="doi">10.5281/zenodo.5176573
+       </citation>
+    </citations>
+</tool>
