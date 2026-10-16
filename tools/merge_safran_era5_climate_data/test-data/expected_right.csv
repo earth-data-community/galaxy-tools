@@ -1,0 +1,6 @@
+site_name,date,T_Q,temperature_2m_mean,soil_moisture_0_to_7cm_mean
+Montpellier,1995-01-01,7.5,7.3,0.339
+Montpellier,1995-01-02,2.7,4.3,0.324
+Montpellier,1995-01-03,2.2,3.2,0.314
+Tokyo,1995-01-01,,5.1,0.28
+Tokyo,1995-01-02,,5.6,0.29
