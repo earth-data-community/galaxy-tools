@@ -1,0 +1,32 @@
+<macros>
+    <token name="@TOOL_VERSION@">1.0.0</token>
+    <token name="@VERSION_SUFFIX@">0</token>
+    <token name="@PROFILE@">25.1</token>
+
+    <xml name="requirements">
+        <requirements>
+            <requirement type="package" version="2.2.3">pandas</requirement>
+        </requirements>
+    </xml>
+
+    <xml name="no_options_validator">
+        <validator type="no_options" message="This dataset has no columns Galaxy can select from. Make sure it is a CSV file with a header row." />
+    </xml>
+
+    <xml name="date_validator">
+        <validator type="regex" message="Date must be in YYYY-MM-DD format.">^$|^\d{4}-\d{2}-\d{2}$</validator>
+    </xml>
+
+    <xml name="citations">
+        <citations>
+            <!-- SAFRAN reanalysis dataset -->
+            <citation type="doi">10.1002/joc.2003</citation>
+            <!-- SAFRAN-ISBA-MODCOU model, source of the SAFRAN-ISBA GEOSAS collection -->
+            <citation type="doi">10.1029/2007JD008548</citation>
+            <!-- ERA5 reanalysis dataset -->
+            <citation type="doi">10.1002/qj.3803</citation>
+            <!-- pandas, used to read, join and write the climate data tables -->
+            <citation type="doi">10.5281/zenodo.3509134</citation>
+        </citations>
+    </xml>
+</macros>
