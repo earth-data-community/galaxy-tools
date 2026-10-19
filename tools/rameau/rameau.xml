@@ -1,0 +1,145 @@
+<tool id="rameau" name="Rameau" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="20.01">
+    <description>Analyse et traitement de données hydrogéologiques</description>
+    <macros>
+        <token name="@TOOL_VERSION@">1.2.0</token>
+        <token name="@VERSION_SUFFIX@">0</token>
+    </macros>
+    <requirements>
+        <container type="docker">brgmcode/rameau:@TOOL_VERSION@</container>
+    </requirements>
+
+    <command detect_errors="exit_code">
+        /app/entrypoint.sh
+    </command>
+
+    <configfiles>
+        <inputs name="inputs" filename="inputs.json" data_style="paths"/>
+        <configfile name="outputs" filename="outputs.json"><![CDATA[{
+            "output": "$output",
+            "outputs_dir": "outputs"
+        }]]></configfile>
+    </configfiles>
+
+    <inputs>
+        <param name="run" type="select" value="Forecast" optional="false" multiple="true" label="Mode d'exécution">
+            <option value="Forecast">Forecast</option>
+            <option value="Optimization">Optimization</option>
+            <option value="Simulation">Simulation</option>
+        </param>
+        <section name="param_section" title="Fichiers de paramétrage" >
+            <param name="param" type="data" format="toml" label="Fichier de paramétrage"/>
+            <param name="arbros" type="data" format="csv" optional="true" label="Fichier de connectivité"/>
+        </section>
+        <section name="data_section" title="Fichiers de données" >
+            <param name="etp" type="data" format="csv" label="etp"/>
+            <param name="pluie" type="data" format="csv" optional="false" label="Pluie"/>
+            <param name="debit" type="data" format="csv" optional="true" label="Débit"/>
+            <param name="piezo" type="data" format="csv" optional="true" label="Piezo"/>
+            <param name="temperature" type="data" format="csv" optional="true" label="Température"/>
+            <param name="neige" type="data" format="csv" optional="true" label="Neige"/>
+            <param name="pre_surf" type="data" format="csv" optional="true" label="Prélèvement surface"/>
+            <param name="pre_sout" type="data" format="csv" optional="true" label="Prélèvement souterrain"/>
+        </section>
+    </inputs>    
+ 
+    <outputs>
+        <data name="output" format="toml" label="resultat" />
+        <collection name="outputs" type="list" label="resultats">
+            <discover_datasets pattern="__designation_and_ext__" directory="outputs"/>
+        </collection>
+    </outputs>
+    <tests>
+        <test>
+            <param name="run" value="Forecast"/>
+            <section name="param_section">
+                <param name="param" value="params.toml" ftype="toml"/>
+                <param name="arbros" value="arbros.csv" ftype="csv"/>
+            </section>
+            <section name="data_section">
+                <param name="etp" value="etp.csv" ftype="csv"/>
+                <param name="pluie" value="pluie.csv" ftype="csv"/>
+                <param name="debit" value="debit.csv" ftype="csv"/>
+                <param name="piezo" value="piezo.csv" ftype="csv"/>
+            </section>
+            <output name="output" ftype="toml">
+                <assert_contents>
+                    <has_text text="[files]"/>
+                </assert_contents>
+            </output>
+            <output_collection name="outputs" type="list" count="2">
+                <element name="forecast_riverflow" ftype="csv">
+                    <assert_contents>
+                        <has_text text="member,norain"/>
+                        <has_text text="Watershed 1"/>
+                    </assert_contents>
+                </element>
+                <element name="forecast_watertable" ftype="csv">
+                    <assert_contents>
+                        <has_text text="member,norain"/>
+                        <has_text text="Watershed 1"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+        </test>
+    </tests>
+    <help><![CDATA[
+RAMEAU
+======
+
+Cet outil permet de réaliser des modélisations hydrogéologiques globales et semi-distribuées avec **RAMEAU**.
+
+Trois modes d’exécution sont possibles :
+
+- **optimisation** : pour l'estimation des paramètres du modèle
+- **simulation** : pour la production de chroniques simulées à partir d'un modèle déjà calibré
+- **forecast** : pour la production de prévisions ensemblistes à partir d'un modèle déjà calibré
+
+Si plusieurs modes sont sélectionnés, l’optimisation sera effectuée en premier.
+
+Paramètres et fichiers requis
+=============================
+
+Fichiers de paramétrage
+-----------------------
+
+- **Fichier de paramétrage (TOML)** : Obligatoire quel que soit le mode d'exécution.
+- **Fichier de connectivité (CSV)** : Nécessaire **uniquement** si le fichier TOML contient plusieurs bassins (modélisation multi-bassins ou semi-distribuée).
+
+Fichiers de données
+-------------------
+
+Tous les fichiers CSV doivent être au format **séparé par tabulations**.
+
+- **ETP** : Obligatoire. Fichier contenant une chronique d'évapotranspiration potentielle (mm).
+- **Pluie** : Obligatoire. Fichier contenant une chronique de précipitations (mm).
+- **Débit** : Nécessaire pour les modèles **pluie-débit** ou **pluie-débit-niveau**. Données en m³/s.
+- **Piézo** : Nécessaire pour les modèles **pluie-niveau** ou **pluie-débit-niveau**. Données en m.
+- **Température** : Nécessaire si le **module neige** est utilisé. Données en °C.
+- **Neige** : Nécessaire si le **module neige** est utilisé. Données de précipitations neigeuses en mm.
+- **Prélèvements surface** : Nécessaire si l’influence des **prélèvements en rivière** est modélisée.
+- **Prélèvements souterrain** : Nécessaire si l’influence des **prélèvements en nappe** est modélisée.
+
+Fichiers de sortie
+------------------
+
+Les fichiers produits dépendent du **mode d'exécution** et du **type de modélisation**.
+
+- Une **chronique hydrométrique simulée** est produite pour les modèles pluie-débit et pluie-débit-niveau.
+- Une **chronique piézométrique simulée** est produite pour les modèles pluie-niveau et pluie-débit-niveau.
+- Un fichier TOML contenant les **paramètres optimisés** est généré pour l’**optimisation** et la **prévision**.
+- Un fichier d’**indicateurs de performance** est généré pour l’**optimisation** et la **simulation**.
+    ]]></help>
+    <citations>
+        <citation type="doi">10.5281/zenodo.15095481</citation>
+    </citations>
+
+    <creator>
+        <person givenName="Eric" familyName="LECAUDE" email="e.lecaude@brgm.fr" jobTitle="Architect"/>
+        <person givenName="Maxime" familyName="LABATUT" email="m.labatut@brgm.fr" jobTitle="Integrator - Tech Lead"/>
+        <person givenName="Hajatiana" familyName="RAMAMBAZAFY" email="h.ramambazafy@brgm.fr" jobTitle="Integrator - Tech Lead"/>
+        <person givenName="Jérémie" familyName="PRAGOUT" email="j.pragout@brgm.fr" jobTitle="Integrator - Developer"/>
+        <person givenName="Thibault" familyName="HALLOUIN" email="t.hallouin@brgm.fr" jobTitle="Ingénieur modélisateur en hydrologie et hydrogéologie"/>
+        <organization name="BRGM" url="https://www.brgm.fr"/>
+    </creator>
+
+</tool>
