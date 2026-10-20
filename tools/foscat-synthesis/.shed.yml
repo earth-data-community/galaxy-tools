@@ -1,0 +1,26 @@
+categories:
+- Climate Analysis
+- Imaging
+- Statistics
+description: Multi-scale scattering-transform synthesis (and gap-filling) of HEALPix maps via FOSCAT (Delouis et al. 2022)
+homepage_url: https://github.com/jmdelouis/FOSCAT
+long_description: |
+  Galaxy tool that synthesizes a HEALPix map (or fills gaps in an
+  observed map) such that its multi-scale scattering-transform
+  statistics match a target reference, using FOSCAT (Delouis et
+  al. 2022). The same algorithm covers two distinct use cases — pure
+  synthesis (generate a new realization with the same scattering
+  statistics as a target map) and gap-filling (replace masked regions
+  of an observed map with values whose scattering statistics match a
+  gap-free reference). The two modes are controlled by which optional
+  masks are supplied. Originally developed for the FIESTA-OSCARS
+  scattering-synthesis chains (astrophysics LSS map synthesis, and
+  Sea-Surface Temperature gap-filling on both standard and WGS84
+  HEALPix grids), but the tool is dataset-agnostic. The chain-specific
+  parts (data ingest, preprocessing, masking choices, plot generation)
+  live at the workflow level on WorkflowHub; this tool provides only
+  the generic FOSCAT optimization step.
+name: foscat_synthesis
+owner: annefou
+remote_repository_url: https://github.com/NordicESMhub/galaxy-tools/tree/master/tools/foscat-synthesis
+type: unrestricted
