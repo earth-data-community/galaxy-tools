@@ -1,0 +1,6 @@
+alpha/alpha_0_32x32.jpg 0
+alpha/alpha_1_96x72.jpg 0
+beta/beta_0_24x40.jpg 1
+beta/beta_1_128x64.jpg 1
+gamma/gamma_0_80x80.jpg 2
+gamma/gamma_1_48x64.jpg 2
