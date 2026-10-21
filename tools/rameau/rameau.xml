@@ -23,8 +23,6 @@
     <inputs>
         <param name="run" type="select" value="Forecast" optional="false" multiple="true" label="Mode d'exécution">
             <option value="Forecast">Forecast</option>
-            <option value="Optimization">Optimization</option>
-            <option value="Simulation">Simulation</option>
         </param>
         <section name="param_section" title="Fichiers de paramétrage" >
             <param name="param" type="data" format="toml" label="Fichier de paramétrage"/>
@@ -49,7 +47,7 @@
         </collection>
     </outputs>
     <tests>
-        <test>
+        <test expect_num_outputs="2">
             <param name="run" value="Forecast"/>
             <section name="param_section">
                 <param name="param" value="params.toml" ftype="toml"/>
@@ -83,52 +81,49 @@
         </test>
     </tests>
     <help><![CDATA[
-RAMEAU
-======
-
-Cet outil permet de réaliser des modélisations hydrogéologiques globales et semi-distribuées avec **RAMEAU**.
-
-Trois modes d’exécution sont possibles :
-
-- **optimisation** : pour l'estimation des paramètres du modèle
-- **simulation** : pour la production de chroniques simulées à partir d'un modèle déjà calibré
-- **forecast** : pour la production de prévisions ensemblistes à partir d'un modèle déjà calibré
-
-Si plusieurs modes sont sélectionnés, l’optimisation sera effectuée en premier.
-
-Paramètres et fichiers requis
-=============================
-
-Fichiers de paramétrage
------------------------
-
-- **Fichier de paramétrage (TOML)** : Obligatoire quel que soit le mode d'exécution.
-- **Fichier de connectivité (CSV)** : Nécessaire **uniquement** si le fichier TOML contient plusieurs bassins (modélisation multi-bassins ou semi-distribuée).
-
-Fichiers de données
--------------------
-
-Tous les fichiers CSV doivent être au format **séparé par tabulations**.
-
-- **ETP** : Obligatoire. Fichier contenant une chronique d'évapotranspiration potentielle (mm).
-- **Pluie** : Obligatoire. Fichier contenant une chronique de précipitations (mm).
-- **Débit** : Nécessaire pour les modèles **pluie-débit** ou **pluie-débit-niveau**. Données en m³/s.
-- **Piézo** : Nécessaire pour les modèles **pluie-niveau** ou **pluie-débit-niveau**. Données en m.
-- **Température** : Nécessaire si le **module neige** est utilisé. Données en °C.
-- **Neige** : Nécessaire si le **module neige** est utilisé. Données de précipitations neigeuses en mm.
-- **Prélèvements surface** : Nécessaire si l’influence des **prélèvements en rivière** est modélisée.
-- **Prélèvements souterrain** : Nécessaire si l’influence des **prélèvements en nappe** est modélisée.
-
-Fichiers de sortie
-------------------
-
-Les fichiers produits dépendent du **mode d'exécution** et du **type de modélisation**.
-
-- Une **chronique hydrométrique simulée** est produite pour les modèles pluie-débit et pluie-débit-niveau.
-- Une **chronique piézométrique simulée** est produite pour les modèles pluie-niveau et pluie-débit-niveau.
-- Un fichier TOML contenant les **paramètres optimisés** est généré pour l’**optimisation** et la **prévision**.
-- Un fichier d’**indicateurs de performance** est généré pour l’**optimisation** et la **simulation**.
-    ]]></help>
+        RAMEAU
+        ======
+        
+        This tool performs lumped and semi-distributed hydrogeological modelling with **RAMEAU**.
+        
+        One execution mode is available:
+        - **forecast**: to produce ensemble forecasts from an already calibrated model
+        
+        If several modes are selected, the optimisation is run first.
+        
+        Required parameters and files
+        =============================
+        
+        Configuration files
+        -------------------
+        
+        - **Configuration file (TOML)**: Required regardless of the execution mode.
+        - **Connectivity file (CSV)**: Required **only** if the TOML file defines several catchments (multi-catchment or semi-distributed modelling).
+        
+        Data files
+        ----------
+        
+        All CSV files must be **tab-separated**.
+        
+        - **PET**: Required. Potential evapotranspiration time series (mm).
+        - **Rainfall**: Required. Precipitation time series (mm).
+        - **Discharge**: Required for **rainfall-discharge** or **rainfall-discharge-level** models. Data in m³/s.
+        - **Piezometric level**: Required for **rainfall-level** or **rainfall-discharge-level** models. Data in m.
+        - **Temperature**: Required if the **snow module** is used. Data in °C.
+        - **Snow**: Required if the **snow module** is used. Snowfall data in mm.
+        - **Surface water abstractions**: Required if the influence of **river abstractions** is modelled.
+        - **Groundwater abstractions**: Required if the influence of **aquifer abstractions** is modelled.
+        
+        Output files
+        ------------
+        
+        The files produced depend on the **execution mode** and the **model type**.
+        
+        - A **simulated discharge time series** is produced for rainfall-discharge and rainfall-discharge-level models.
+        - A **simulated piezometric time series** is produced for rainfall-level and rainfall-discharge-level models.
+        - A TOML file containing the **optimised parameters** is generated for **optimisation** and **forecast**.
+        - A **performance metrics** file is generated for **optimisation** and **simulation**.
+            ]]></help>
     <citations>
         <citation type="doi">10.5281/zenodo.15095481</citation>
     </citations>
@@ -138,8 +133,9 @@ Les fichiers produits dépendent du **mode d'exécution** et du **type de modél
         <person givenName="Maxime" familyName="LABATUT" email="m.labatut@brgm.fr" jobTitle="Integrator - Tech Lead"/>
         <person givenName="Hajatiana" familyName="RAMAMBAZAFY" email="h.ramambazafy@brgm.fr" jobTitle="Integrator - Tech Lead"/>
         <person givenName="Jérémie" familyName="PRAGOUT" email="j.pragout@brgm.fr" jobTitle="Integrator - Developer"/>
-        <person givenName="Thibault" familyName="HALLOUIN" email="t.hallouin@brgm.fr" jobTitle="Ingénieur modélisateur en hydrologie et hydrogéologie"/>
+        <person givenName="Thibault" familyName="HALLOUIN" email="t.hallouin@brgm.fr" jobTitle="Hydrology and hydrogeology modelling engineer"/>
         <organization name="BRGM" url="https://www.brgm.fr"/>
+        <organization name="Data Terra" url="https://www.data-terra.org/"/>
     </creator>
 
 </tool>
