@@ -1,5 +1,5 @@
 <tool id="rameau" name="Rameau" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="20.01">
-    <description>Analyse et traitement de données hydrogéologiques</description>
+    <description>Analysis and processing of hydrogeological data</description>
     <macros>
         <token name="@TOOL_VERSION@">1.2.0</token>
         <token name="@VERSION_SUFFIX@">0</token>
@@ -21,28 +21,28 @@
     </configfiles>
 
     <inputs>
-        <param name="run" type="select" value="Forecast" optional="false" multiple="true" label="Mode d'exécution">
+        <param name="run" type="select" value="Forecast" optional="false" multiple="true" label="Execution mode">
             <option value="Forecast">Forecast</option>
         </param>
-        <section name="param_section" title="Fichiers de paramétrage" >
-            <param name="param" type="data" format="toml" label="Fichier de paramétrage"/>
-            <param name="arbros" type="data" format="csv" optional="true" label="Fichier de connectivité"/>
+        <section name="param_section" title="Configuration files" >
+            <param name="param" type="data" format="toml" label="Configuration file"/>
+            <param name="arbros" type="data" format="csv" optional="true" label="Connectivity file"/>
         </section>
-        <section name="data_section" title="Fichiers de données" >
-            <param name="etp" type="data" format="csv" label="etp"/>
-            <param name="pluie" type="data" format="csv" optional="false" label="Pluie"/>
-            <param name="debit" type="data" format="csv" optional="true" label="Débit"/>
-            <param name="piezo" type="data" format="csv" optional="true" label="Piezo"/>
-            <param name="temperature" type="data" format="csv" optional="true" label="Température"/>
-            <param name="neige" type="data" format="csv" optional="true" label="Neige"/>
-            <param name="pre_surf" type="data" format="csv" optional="true" label="Prélèvement surface"/>
-            <param name="pre_sout" type="data" format="csv" optional="true" label="Prélèvement souterrain"/>
+        <section name="data_section" title="Data files" >
+            <param name="etp" type="data" format="csv" label="Potential evapotranspiration"/>
+            <param name="pluie" type="data" format="csv" optional="false" label="Rainfall"/>
+            <param name="debit" type="data" format="csv" optional="true" label="Discharge"/>
+            <param name="piezo" type="data" format="csv" optional="true" label="Piezometric level"/>
+            <param name="temperature" type="data" format="csv" optional="true" label="Temperature"/>
+            <param name="neige" type="data" format="csv" optional="true" label="Snow"/>
+            <param name="pre_surf" type="data" format="csv" optional="true" label="Surface water abstractions"/>
+            <param name="pre_sout" type="data" format="csv" optional="true" label="Groundwater abstractions"/>
         </section>
     </inputs>    
  
     <outputs>
-        <data name="output" format="toml" label="resultat" />
-        <collection name="outputs" type="list" label="resultats">
+        <data name="output" format="toml" label="Result" />
+        <collection name="outputs" type="list" label="Results">
             <discover_datasets pattern="__designation_and_ext__" directory="outputs"/>
         </collection>
     </outputs>
