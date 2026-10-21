@@ -81,49 +81,50 @@
         </test>
     </tests>
     <help><![CDATA[
-        RAMEAU
-        ======
-        
-        This tool performs lumped and semi-distributed hydrogeological modelling with **RAMEAU**.
-        
-        One execution mode is available:
-        - **forecast**: to produce ensemble forecasts from an already calibrated model
-        
-        If several modes are selected, the optimisation is run first.
-        
-        Required parameters and files
-        =============================
-        
-        Configuration files
-        -------------------
-        
-        - **Configuration file (TOML)**: Required regardless of the execution mode.
-        - **Connectivity file (CSV)**: Required **only** if the TOML file defines several catchments (multi-catchment or semi-distributed modelling).
-        
-        Data files
-        ----------
-        
-        All CSV files must be **tab-separated**.
-        
-        - **PET**: Required. Potential evapotranspiration time series (mm).
-        - **Rainfall**: Required. Precipitation time series (mm).
-        - **Discharge**: Required for **rainfall-discharge** or **rainfall-discharge-level** models. Data in m³/s.
-        - **Piezometric level**: Required for **rainfall-level** or **rainfall-discharge-level** models. Data in m.
-        - **Temperature**: Required if the **snow module** is used. Data in °C.
-        - **Snow**: Required if the **snow module** is used. Snowfall data in mm.
-        - **Surface water abstractions**: Required if the influence of **river abstractions** is modelled.
-        - **Groundwater abstractions**: Required if the influence of **aquifer abstractions** is modelled.
-        
-        Output files
-        ------------
-        
-        The files produced depend on the **execution mode** and the **model type**.
-        
-        - A **simulated discharge time series** is produced for rainfall-discharge and rainfall-discharge-level models.
-        - A **simulated piezometric time series** is produced for rainfall-level and rainfall-discharge-level models.
-        - A TOML file containing the **optimised parameters** is generated for **optimisation** and **forecast**.
-        - A **performance metrics** file is generated for **optimisation** and **simulation**.
-            ]]></help>
+RAMEAU
+======
+
+This tool performs lumped and semi-distributed hydrogeological modelling with **RAMEAU**.
+
+One execution mode is available:
+
+- **forecast**: to produce ensemble forecasts from an already calibrated model
+
+If several modes are selected, the optimisation is run first.
+
+Required parameters and files
+=============================
+
+Configuration files
+-------------------
+
+- **Configuration file (TOML)**: Required regardless of the execution mode.
+- **Connectivity file (CSV)**: Required **only** if the TOML file defines several catchments (multi-catchment or semi-distributed modelling).
+
+Data files
+----------
+
+All CSV files must be **tab-separated**.
+
+- **PET**: Required. Potential evapotranspiration time series (mm).
+- **Rainfall**: Required. Precipitation time series (mm).
+- **Discharge**: Required for **rainfall-discharge** or **rainfall-discharge-level** models. Data in m³/s.
+- **Piezometric level**: Required for **rainfall-level** or **rainfall-discharge-level** models. Data in m.
+- **Temperature**: Required if the **snow module** is used. Data in °C.
+- **Snow**: Required if the **snow module** is used. Snowfall data in mm.
+- **Surface water abstractions**: Required if the influence of **river abstractions** is modelled.
+- **Groundwater abstractions**: Required if the influence of **aquifer abstractions** is modelled.
+
+Output files
+------------
+
+The files produced depend on the **execution mode** and the **model type**.
+
+- A **simulated discharge time series** is produced for rainfall-discharge and rainfall-discharge-level models.
+- A **simulated piezometric time series** is produced for rainfall-level and rainfall-discharge-level models.
+- A TOML file containing the **optimised parameters** is generated for **optimisation** and **forecast**.
+- A **performance metrics** file is generated for **optimisation** and **simulation**.
+]]></help>
     <citations>
         <citation type="doi">10.5281/zenodo.15095481</citation>
     </citations>
