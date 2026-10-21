@@ -1,0 +1,10 @@
+name: rameau
+owner: climate
+description: Global and semi-distributed hydrogeological modeling
+long_description: |
+  This tool enables global and semi-distributed hydrogeological modeling with RAMEAU.
+categories:
+  - Climate Analysis
+  - Ecology
+homepage_url: https://rameau.readthedocs.io/
+remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/rameau
