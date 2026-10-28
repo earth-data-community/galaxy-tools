@@ -1,3 +1,8 @@
+title: Galaxy Earth System Sciences
+slug: "gess"
+weight: 2
+tags: ["VRE", "workflow", "tools"]
+
 # Galaxy for Earth System Sciences (GESS)
 
 <img src="https://github.com/earth-data-community/.github/blob/main/profile/logos/GESS_logo.png" alt="GESS logo" width="250" style="display: inline-block; margin: 0 15px; vertical-align: middle;" />
