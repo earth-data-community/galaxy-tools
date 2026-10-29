@@ -2,7 +2,7 @@
 title: Contributing to Galaxy for Earth System Sciences
 slug: "Contribute to GESS"
 weight: 2
-tags: ["tools", ""wrappers, "workflow"]
+tags: ["tools", "wrappers", "workflow"]
 ---
 
 # Contributing
