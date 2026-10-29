@@ -1,6 +1,6 @@
 ---
-title: Galaxy Earth System Sciences
-slug: "gess"
+title: Galaxy for Earth System Sciences
+slug: "GESS"
 weight: 2
 tags: ["VRE", "workflow", "tools"]
 ---
