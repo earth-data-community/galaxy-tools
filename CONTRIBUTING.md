@@ -1,3 +1,10 @@
+---
+title: Contributing to Galaxy for Earth System Sciences
+slug: "Contribute to GESS"
+weight: 2
+tags: ["tools", ""wrappers, "workflow"]
+---
+
 # Contributing
 
 This document describes how to contribute to this repository. Pull
