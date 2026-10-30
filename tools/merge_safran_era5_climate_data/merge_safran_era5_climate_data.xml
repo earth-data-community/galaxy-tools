@@ -1,0 +1,204 @@
+<tool id="merge_safran_era5_climate_data" name="Merge SAFRAN and ERA5 climate data" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="@PROFILE@">
+    <description>combine matching site/date records from both files into one table</description>
+    <macros>
+        <import>macros.xml</import>
+    </macros>
+    <expand macro="requirements"/>
+    <required_files>
+        <include path="merge_safran_era5.py"/>
+    </required_files>
+    <command detect_errors="exit_code"><![CDATA[
+python '$__tool_directory__/merge_safran_era5.py'
+    --safran-file '$safran_input'
+    --safran-site-column '$safran_site_column'
+    --safran-date-column '$safran_date_column'
+    #if $safran_value_columns
+        --safran-value-columns '$safran_value_columns'
+    #end if
+    --era5-file '$era5_input'
+    --era5-site-column '$era5_site_column'
+    --era5-date-column '$era5_date_column'
+    #if $era5_value_columns
+        --era5-value-columns '$era5_value_columns'
+    #end if
+    --join-type '$join_type'
+    --round-decimals '$round_decimals'
+    #if str($date_start).strip()
+        --date-start '$date_start'
+    #end if
+    #if str($date_end).strip()
+        --date-end '$date_end'
+    #end if
+    --output '$merged_output'
+]]></command>
+    <inputs>
+        <param name="safran_input" type="data" format="csv" label="SAFRAN climate data file" help="Daily SAFRAN file with a site column, a date column and one or more climate variable columns, e.g. the output of the 'Get SAFRAN data (GEOSAS API)' tool."/>
+        <param name="safran_site_column" type="data_column" data_ref="safran_input" use_header_names="true" label="Site column (SAFRAN file)" help="Column identifying the site/location in the SAFRAN file.">
+            <expand macro="no_options_validator"/>
+        </param>
+        <param name="safran_date_column" type="data_column" data_ref="safran_input" use_header_names="true" label="Date column (SAFRAN file)" help="Column holding the date in the SAFRAN file.">
+            <expand macro="no_options_validator"/>
+        </param>
+        <param name="safran_value_columns" type="data_column" data_ref="safran_input" use_header_names="true" multiple="true" optional="true" label="SAFRAN variable columns to keep" help="Climate variable columns to carry over from the SAFRAN file (e.g. T_Q, PRELIQ_Q). Leave empty to keep every column except the site and date columns."/>
+        <param name="era5_input" type="data" format="csv" label="ERA5 climate data file" help="Daily ERA5 / ERA5-Land file with a site column, a date column and one or more climate variable columns, for the same sites as the SAFRAN file."/>
+        <param name="era5_site_column" type="data_column" data_ref="era5_input" use_header_names="true" label="Site column (ERA5 file)" help="Column identifying the site/location in the ERA5 file.">
+            <expand macro="no_options_validator"/>
+        </param>
+        <param name="era5_date_column" type="data_column" data_ref="era5_input" use_header_names="true" label="Date column (ERA5 file)" help="Column holding the date in the ERA5 file.">
+            <expand macro="no_options_validator"/>
+        </param>
+        <param name="era5_value_columns" type="data_column" data_ref="era5_input" use_header_names="true" multiple="true" optional="true" label="ERA5 variable columns to keep" help="Climate variable columns to carry over from the ERA5 file (e.g. temperature_2m_mean, soil_moisture_0_to_7cm_mean). Leave empty to keep every column except the site and date columns."/>
+        <param name="join_type" type="select" label="How to combine records between the two files" help="Inner keeps only matching site/date pairs; left/right keep every record from one file and leave the other side's columns empty where there is no match; outer keeps every record from either file.">
+            <option value="inner" selected="true">Inner join - keep only site/date combinations present in both files</option>
+            <option value="left">Left join - keep every SAFRAN record</option>
+            <option value="right">Right join - keep every ERA5 record</option>
+            <option value="outer">Outer join - keep every record from either file</option>
+        </param>
+        <param name="date_start" type="text" value="" optional="true" label="Keep records on or after this date (YYYY-MM-DD)" help="Leave empty to keep every date.">
+            <expand macro="date_validator"/>
+        </param>
+        <param name="date_end" type="text" value="" optional="true" label="Keep records on or before this date (YYYY-MM-DD)" help="Leave empty to keep every date.">
+            <expand macro="date_validator"/>
+        </param>
+        <param name="round_decimals" type="integer" value="2" min="0" max="6" label="Decimal places for numeric columns" help="Number of decimal places used to round numeric columns (including any coordinate columns carried over) in the merged output."/>
+    </inputs>
+    <outputs>
+        <data name="merged_output" format="csv" label="Merge SAFRAN &amp; ERA5 climate data (${join_type} join) on ${on_string}"/>
+    </outputs>
+    <tests>
+        <!-- Inner join, explicit variable columns on both sides -->
+        <test expect_num_outputs="1">
+            <param name="safran_input" value="safran_sample.csv" ftype="csv"/>
+            <param name="safran_site_column" value="1"/>
+            <param name="safran_date_column" value="2"/>
+            <param name="safran_value_columns" value="3,4"/>
+            <param name="era5_input" value="era5_sample.csv" ftype="csv"/>
+            <param name="era5_site_column" value="1"/>
+            <param name="era5_date_column" value="4"/>
+            <param name="era5_value_columns" value="5,6"/>
+            <param name="join_type" value="inner"/>
+            <param name="round_decimals" value="4"/>
+            <output name="merged_output" file="expected_inner.csv" ftype="csv"/>
+        </test>
+        <!-- Left join, default (keep all) variable columns on both sides, exercises the _safran/_era5 suffixing on colliding column names -->
+        <test expect_num_outputs="1">
+            <param name="safran_input" value="safran_sample.csv" ftype="csv"/>
+            <param name="safran_site_column" value="1"/>
+            <param name="safran_date_column" value="2"/>
+            <param name="era5_input" value="era5_sample.csv" ftype="csv"/>
+            <param name="era5_site_column" value="1"/>
+            <param name="era5_date_column" value="4"/>
+            <param name="join_type" value="left"/>
+            <param name="round_decimals" value="4"/>
+            <output name="merged_output" file="expected_left.csv" ftype="csv"/>
+        </test>
+        <!-- Right join, explicit variable columns on both sides -->
+        <test expect_num_outputs="1">
+            <param name="safran_input" value="safran_sample.csv" ftype="csv"/>
+            <param name="safran_site_column" value="1"/>
+            <param name="safran_date_column" value="2"/>
+            <param name="safran_value_columns" value="3"/>
+            <param name="era5_input" value="era5_sample.csv" ftype="csv"/>
+            <param name="era5_site_column" value="1"/>
+            <param name="era5_date_column" value="4"/>
+            <param name="era5_value_columns" value="5,6"/>
+            <param name="join_type" value="right"/>
+            <param name="round_decimals" value="4"/>
+            <output name="merged_output" file="expected_right.csv" ftype="csv"/>
+        </test>
+        <!-- Outer join, default (keep all) variable columns on both sides -->
+        <test expect_num_outputs="1">
+            <param name="safran_input" value="safran_sample.csv" ftype="csv"/>
+            <param name="safran_site_column" value="1"/>
+            <param name="safran_date_column" value="2"/>
+            <param name="era5_input" value="era5_sample.csv" ftype="csv"/>
+            <param name="era5_site_column" value="1"/>
+            <param name="era5_date_column" value="4"/>
+            <param name="join_type" value="outer"/>
+            <param name="round_decimals" value="4"/>
+            <output name="merged_output" file="expected_outer.csv" ftype="csv"/>
+        </test>
+        <!-- Inner join restricted to a single date, exercises date_start/date_end -->
+        <test expect_num_outputs="1">
+            <param name="safran_input" value="safran_sample.csv" ftype="csv"/>
+            <param name="safran_site_column" value="1"/>
+            <param name="safran_date_column" value="2"/>
+            <param name="safran_value_columns" value="3,4"/>
+            <param name="era5_input" value="era5_sample.csv" ftype="csv"/>
+            <param name="era5_site_column" value="1"/>
+            <param name="era5_date_column" value="4"/>
+            <param name="era5_value_columns" value="5,6"/>
+            <param name="join_type" value="inner"/>
+            <param name="date_start" value="1995-01-02"/>
+            <param name="date_end" value="1995-01-02"/>
+            <param name="round_decimals" value="4"/>
+            <output name="merged_output" file="expected_date_filtered.csv" ftype="csv"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+**What it does**
+
+This tool combines a SAFRAN climate reanalysis file (for example, produced
+by the *Get SAFRAN data (GEOSAS API)* tool, covering metropolitan France)
+and an ERA5 / ERA5-Land reanalysis file for the same sites into a single
+table, matched on a site identifier and a date.
+
+It is typically used to complete SAFRAN atmospheric variables (temperature,
+precipitation, potential evapotranspiration, ...) with ERA5 variables that
+SAFRAN does not provide, such as depth-resolved soil moisture and soil
+temperature, for the same site and date.
+
+**Input format**
+
+Both input files must be CSV files with a header row, each containing at
+least:
+
+- a column identifying the site (e.g. ``site_name``)
+- a column holding the date (ideally ``YYYY-MM-DD``; other common date
+  formats are also accepted and normalised to ``YYYY-MM-DD``)
+- one or more climate variable columns
+
+The two files do not need to share the same column names, order, or set of
+sites: you choose which column plays each role, separately for each file.
+
+**Joining records**
+
+- *Inner*: keep only the site/date combinations present in **both** files.
+- *Left*: keep every SAFRAN record; ERA5 columns are left empty where there
+  is no matching ERA5 record.
+- *Right*: keep every ERA5 record; SAFRAN columns are left empty where there
+  is no matching SAFRAN record.
+- *Outer*: keep every record from either file.
+
+If a variable column has the same name in both files, ``_safran`` and
+``_era5`` suffixes are added so both are kept and can be told apart.
+
+The exception is ``longitude`` and ``latitude``: when both files carry them,
+they are merged into a single ``longitude`` and a single ``latitude`` column.
+The SAFRAN value is kept (the ERA5 value is used only where there is no
+SAFRAN record), and a warning is logged if the two sources disagree.
+
+**Output**
+
+A single CSV file with ``site_name``, ``date``, and the selected climate
+variable columns from both sources, sorted by site and then date. Numeric
+columns are rounded to the chosen number of decimal places.
+
+**Known limitations**
+
+- Each site/date combination must be unique within each input file; the
+  tool stops with an error if duplicates are found, rather than guessing
+  which row to keep.
+- Dates that cannot be parsed cause the tool to stop with an error rather
+  than being silently dropped.
+- SAFRAN covers metropolitan France only; sites outside that domain will
+  only have ERA5 data, which matters for the *right* and *outer* join
+  modes (the SAFRAN columns will be empty for those sites).
+    ]]></help>
+    <expand macro="citations"/>
+    <creator>
+        <person givenName="Mathieu" familyName="Guimont" url="https://github.com/Mathmath34"/>
+        <organization name="ALAMOD" url="https://www.pepr-faircarbon.fr/projets/alamod/"/>
+        <organization name="Data Terra" url="https://www.data-terra.org/"/>
+    </creator>
+</tool>
