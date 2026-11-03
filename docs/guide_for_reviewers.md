@@ -1,3 +1,10 @@
+---
+title: Review tools Guidelines
+slug: "Review"
+weight: 2
+tags: ["tools", "wrappers", "review"]
+---
+
 # New Tool Review Guide
 
 This document describes a checklist suitable as a guide for reviewers of pull requests against the Earth Data's tools repo. It is a guide only and reviewer discretion is still advised.
