@@ -1,0 +1,22 @@
+<macros>
+    <token name="@TOOL_VERSION@">2026.4.1</token>
+    <token name="@VERSION_SUFFIX@">0</token>
+    <xml name="requirements">
+        <requirements>
+            <requirement type="package" version="@TOOL_VERSION@">foscat</requirement>
+            <requirement type="package" version="2.12.1">pytorch-cpu</requirement>
+            <requirement type="package" version="11.2.1">pillow</requirement>
+        </requirements>
+    </xml>
+    <xml name="citations">
+        <citations>
+            <citation type="doi">10.1051/0004-6361/202244566</citation>
+            <citation type="bibtex">@software{foscat,
+            author = {Delouis, Jean-Marc and Fouilloux, Anne and contributors},
+            title = {{FOSCAT}: scattering transform on 2D and HEALPix data},
+            url = {https://github.com/jmdelouis/FOSCAT},
+            year = {2026}
+        }</citation>
+        </citations>
+    </xml>
+</macros>
