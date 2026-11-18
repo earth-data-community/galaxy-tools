@@ -1,0 +1,21 @@
+categories:
+- Machine Learning
+- Imaging
+description: Keras image-classifier inference using the planktonclas pipeline (10-crop TTA), originally for Decrop et al. 2025's phytoplankton EfficientNetV2-B0
+homepage_url: https://github.com/lifewatch/planktonclas
+long_description: |
+  Galaxy tool that runs Keras image-classifier inference using the
+  planktonclas pipeline. Loads a planktonclas-format model archive (model
+  HDF5, conf.json, classes.txt), runs 10-crop test-time augmentation (TTA)
+  inference on a list of images, and writes a single NPZ output with
+  per-image softmax probabilities. Originally built around Decrop
+  et al. 2025's pretrained EfficientNetV2-B0 phytoplankton classifier
+  (Zenodo 15269453), but applicable to any planktonclas-format model.
+  Input image sizes are arbitrary — every image is resized to
+  conf.json's model.image_size before inference. The output schema is
+  compatible with cnn_predictions_*.npz consumed by the
+  scattering-stacking Galaxy tool in the FIESTA-bio chain.
+name: planktonclas_inference
+owner: annefou
+remote_repository_url: https://github.com/NordicESMhub/galaxy-tools/tree/master/tools/planktonclas-inference
+type: unrestricted
