@@ -1,0 +1,216 @@
+<tool id="preprocess_icenet_data" name="Preprocess Icenet Data" version="0.1.0+galaxy0" profile="21.05">
+    <description>for regridding and normalizing icenet data</description>
+        <requirements>
+            <requirement type="package" version= "3.10.9">python</requirement>
+            <requirement type="package" version="2023.1.0">xarray</requirement>
+            <requirement type="package" version="1.24.2">numpy</requirement>
+            <requirement type="package" version="1.5.3">pandas</requirement>
+            <requirement type="package" version="1.10.0">scipy</requirement>
+            <requirement type="package" version="3.4.0">iris</requirement>
+            <requirement type="package" version="1.6.0">netcdf4</requirement>
+            <requirement type="package" version="2.15.0">imageio</requirement>
+            <requirement type="package" version="3.6.3">matplotlib</requirement>
+            <requirement type="package" version="4.64.1">tqdm</requirement>
+            <requirement type="package" version="0.5.1">cdsapi</requirement>
+            <requirement type="package" version="2.10">tensorflow</requirement>
+        </requirements>
+        <command detect_errors="exit_code"><![CDATA[
+            mkdir -p "data/obs"  &&
+            #for $climatology in $climatologies#
+              ln -s '$climatology' "data/obs/${climatology.element_identifier}";
+            #end for#
+            cp -r '$__tool_directory__/masks' 'data/' && 
+            python3 '$__tool_directory__/prepare_sic_data.py' --input '$siconca_file'       &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$tas_file' --var "tas"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$ta500_file' --var "ta500"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$tos_file' --var "tos"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$rsus_file' '$rsds_file' --var "rsds_and_rsus"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$psl_file' --var "psl"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$zg500_file' --var "zg500"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$zg250_file' --var "zg250"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$ua10_file' --var "ua10"             &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$uas_file' --var "uas"           &&
+            python3 '$__tool_directory__/prepare_era5_data.py' --input '$vas_file' --var "vas"               &&  
+            python3 '$__tool_directory__/rotate_wind_data.py'                                                &&
+            echo "regridding is done"                                                                         &&
+            mkdir -p "data/network_datasets/dataset1"     && 
+            cp '$__tool_directory__/norm_params.json' "data/network_datasets/dataset1/norm_params.json" && 
+            echo "moved file" &&
+            python3 '$__tool_directory__/preproc_icenet_data.py' --input '$__tool_directory__/2021_09_03_1300_icenet_config.json' && 
+            echo "preprocessing is done"
+        ]]></command>
+        <inputs>
+            <param name="climatologies" type="data_collection" label="Calculated climatologies for ERA5 variables from 1980 - 2011" help="These files are provided in the Data Library and are used to calculate the anomalies of the ERA5 variables"/>
+            <param name="siconca_file" type="data" label="Monthly averaged OSI-SAF sea ice concentration data" format="netcdf" help="preceding 35 years of the forecast initialization year are needed in order to calculate the linear trend data, these can be generated with the Concatenate Icenet Data Tool and the sea ice concentration files from the Data Library"/>
+            <param name="tas_file" type="data" label="Monthly averaged ERA5 2m temperature data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview"/>
+            <param name="ta500_file" type="data" label="Monthly averaged ERA5 pressure level 500 temperature data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels-monthly-means?tab=overview"/>
+            <param name="tos_file" type="data" label="Monthly averaged ERA5 sea surface temperature data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview"/>
+            <param name="rsds_file" type="data" label="Monthly averaged ERA5 surface solar radiation downwards data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview"/>
+            <param name="rsus_file" type="data" label="Monthly averaged ERA5 surface net solar radiation data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview"/>
+            <param name="psl_file" type="data" label="Monthly averaged ERA5 mean sea level pressure data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels-monthly-means?tab=overview"/>
+            <param name="zg500_file" type="data" label="Monthly averaged pressure level 500 geopotential data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels-monthly-means?tab=overview"/>
+            <param name="zg250_file" type="data" label="Monthly averaged ERA5 pressure level 250 geopotential data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels-monthly-means?tab=overview"/>
+            <param name="ua10_file" type="data" label="Monthly averaged ERA5 pressure level 10 u component of wind data" format="netcdf" help= "preceding 3 months of the forecast initialization month are needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels-monthly-means?tab=overview"/>
+            <param name="uas_file" type="data" label="Monthly averaged ERA5 10m u component of wind data" format="netcdf" help= "preceding month of the forecast initialization month is needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview"/>
+            <param name="vas_file" type="data" label="Monthly averaged ERA5 10m v component of wind data" format="netcdf" help= "preceding month of the forecast initialization month is needed for optimal results, can be downloaded from the Climate Data Store https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview"/>  
+        </inputs>
+        <outputs>
+            <data name="siconca_EASE_file" format="netcdf" from_work_dir="data/obs/siconca_EASE.nc"/>
+            <collection name="siconca_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/siconca/abs"/>
+	    </collection>
+	    <collection name="linear_trend_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/siconca/linear_trend"/>
+	    </collection>
+	    <collection name="tas_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/tas/anom"/>
+	    </collection>
+	    <collection name="ta500_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/ta500/anom"/>
+	    </collection>
+	    <collection name="tos_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/tos/anom"/>
+	    </collection>
+	    <collection name="rsds_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/rsds/anom"/>
+	    </collection>
+	    <collection name="rsus_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/rsus/anom"/>
+	    </collection>
+	    <collection name="psl_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/psl/anom"/>
+	    </collection>
+	    <collection name="zg500_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/zg500/anom"/>
+	    </collection>
+	    <collection name="zg250_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/zg250/anom"/>
+	    </collection>
+	    <collection name="ua10_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/ua10/abs" />
+	    </collection>
+	    <collection name="uas_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/uas/abs" />
+	    </collection>
+	    <collection name="vas_dataset" type="list">
+    	        <discover_datasets pattern="__name__" format="binary" directory="data/network_datasets/dataset1/obs/vas/abs"/>
+	    </collection>
+    </outputs>
+    <tests>
+    <!--
+        <test>
+            <param name="siconca_file" value="siconca.nc"/>
+            <param name="tas_file" value="tas_latlon.nc"/>
+            <param name="ta500_file" value="ta500_latlon.nc"/>
+            <param name="tos_file" value="tos_latlon.nc"/>
+            <param name="rsds_file" value="rsds_latlon.nc"/>
+            <param name="rsus_file" value="rss_latlon.nc"/>
+            <param name="psl_file" value="psl_latlon.nc"/>
+            <param name="zg500_file" value="zg500_latlon.nc"/>
+            <param name="zg250_file" value="zg250_latlon.nc"/>
+            <param name="ua10_file" value="ua10_latlon.nc"/>
+            <param name="uas_file" value="uas_latlon.nc"/>
+            <param name="vas_file" value="vas_latlon.nc"/> 
+            <output_collection name="metadata">
+                <element name="land">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="siconca_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="tas_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="ta500_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="tos_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="rsds_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="rsus_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="psl_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="zg500_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="zg250_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="ua10_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="uas_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+            <output_collection name="vas_dataset">
+                <element name="1979_01">
+                    <assert_contents>
+                        <has_size value="746624" delta="100"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+        </test>
+        -->
+    </tests>
+        <help><![CDATA[
+            This tool is a wrapper to regrid and normalize data from the input variables for the icenet network which can forecast arctic sea ice up to 6 months.
+            It creates numpy files, which can be used as an input for the icenet forecast tool.
+        ]]></help>
+        <citations>
+            <citation type="doi">10.5281/zenodo.5176573
+            </citation>
+        </citations>
+    </tool>

@@ -1,0 +1,14 @@
+name: icenet
+owner: climate
+suite: 
+  name: "suite_icenet"
+  description: "A suite of icenet tools"
+  type: repository_suite_definition
+description: A collection of tools to create a forecast of the sea ice concentration with IceNet and visualize it
+homepage_url: https://zenodo.org/record/5176573
+long_description: |
+    IceNet is a probabilistic, deep learning sea ice forecasting system. It consists of an ensemble of U-Net networks, which learns how sea ice changes from climate simulations and observational data to forecast up to 6 months of monthly-averaged sea ice concentration maps at 25 km resolution. The forecast tool takes pretrained IceNet models downloaded from the Polar Data Centre and Observational Data generated with the "Preprocess Icenet Data Tool" as an input and creates one netcdf forecast file as an output. This forecast file can be used as an input for the "Visualize Icenet Forecast Tool" to plot an interactive figure.
+remote_repository_url: https://github.com/NordicESMhub/galaxy-tools/tree/master/tools/icenet
+type: unrestricted
+categories:
+- Climate Analysis
