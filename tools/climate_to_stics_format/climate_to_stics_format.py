@@ -2,26 +2,28 @@
 """
 climate_to_stics.py
 ===================
-Converts daily climate data (ERA5, SAFRAN/GeoSAS, DRIAS-2020 or custom) into
-STICS crop model input files.
+Converts daily climate data (ERA5 / Open-Meteo, SAFRAN / GeoSAS / SIM2,
+DRIAS-2020, INRAE AgroClim stations or custom tables) into STICS crop model
+input files.
 
 Each output file ``{cell_id}.{year}`` is a headerless TSV with columns:
   cell_id | year | month | day_of_month | day_of_year |
   tasmin  | tasmax | rsds | etp | prtot | wind | vapp | co2
+
+Missing values are written as -999.9 (STICS convention).
 
 Part of the DairyFit project (INRAE).
 https://forge.inrae.fr/dairyfit/lot1/chaine_traitement_indicateur
 """
 
 import argparse
-import json
 import logging
 import os
 import sys
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import numpy as np
@@ -30,7 +32,10 @@ import rioxarray  # noqa: F401 – registers .rio accessor on xarray objects
 import xarray as xr
 from rasterio.features import rasterize
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
+
+# STICS missing-value code
+STICS_MISSING = -999.9
 
 # =============================================================================
 # VARIABLE MAPPING TABLES
@@ -294,11 +299,71 @@ OPENMETEO_MAPPING: Dict = {
                "unit_out": "%", "conversion": None},
 }
 
+# INRAE AgroClim network, daily station files ------------------------------
+# Source: "Daily and hourly climatic data from 54 stations of the INRAE
+# Agroclim network" (Recherche Data Gouv, doi:10.57745/BQ0BWB), files
+# Station_Agroclim_INRAE_{station_id}_daily_{first}_{last}.csv and variable
+# dictionary variables_brutes_et_elaborees.csv. Global radiation RG is a
+# daily sum in J/cm² (→ MJ/m²/day via ×0.01). Wind V is measured at 2 m on
+# INRAE stations, i.e. already at the STICS reference height: no height
+# correction is applied.
+AGROCLIM_MAPPING: Dict = {
+    "tasmax": {
+        "names": ["tx", "TX"], "unit_in": "°C", "unit_out": "°C",
+        "conversion": None,
+    },
+    "tasmin": {
+        "names": ["tn", "TN"], "unit_in": "°C", "unit_out": "°C",
+        "conversion": None,
+    },
+    "rsds": {
+        "names": ["rg", "RG"], "unit_in": "J/cm²/day",
+        "unit_out": "MJ/m²/day", "conversion": "Jcm2_to_MJ",
+    },
+    "prtot": {
+        "names": ["rr", "RR"], "unit_in": "mm/day", "unit_out": "mm/day",
+        "conversion": None,
+    },
+    "etp": {
+        "names": ["etpp", "ETPP"], "unit_in": "mm/day (Penman)",
+        "unit_out": "mm/day", "conversion": None,
+    },
+    "wind": {
+        "names": ["v", "V"], "unit_in": "m/s  (2 m height)",
+        "unit_out": "m/s  (2 m height)", "conversion": None,
+    },
+    "hr": {
+        "names": ["um", "UM"], "unit_in": "%", "unit_out": "%",
+        "conversion": None,
+    },
+}
+
+# Name of the station identifier column in AgroClim daily files
+AGROCLIM_STATION_COLUMN = "station_id"
+
 # Aggregated lookup
 ALL_MAPPINGS = {
-    "era5":   ERA5_MAPPING,
-    "safran": SAFRAN_MAPPING,
-    "drias":  DRIAS_MAPPING,
+    "era5":     ERA5_MAPPING,
+    "safran":   SAFRAN_MAPPING,
+    "drias":    DRIAS_MAPPING,
+    "agroclim": AGROCLIM_MAPPING,
+}
+
+# Custom source: unit choice (Galaxy select value) -> conversion key ------
+CUSTOM_UNIT_CONVERSIONS: Dict[str, Dict[str, Optional[str]]] = {
+    "temp": {"celsius": None, "kelvin": "K_to_C"},
+    "rsds": {
+        "mj_m2": None, "j_m2": "J_to_MJ", "j_cm2": "Jcm2_to_MJ",
+        "w_m2": "Wm2_to_MJ",
+    },
+    "precip": {"mm": None, "m": "m_to_mm", "kg_m2_s": "kgm2s_to_mm"},
+    "etp": {
+        "mm": None, "m_neg": "m_to_mm_abs", "kg_m2_s": "kgm2s_to_mm",
+    },
+    "wind": {
+        "ms_2m": None, "ms_10m": "wind_height",
+        "kmh_2m": "kmh_to_ms", "kmh_10m": "kmh_to_ms_height",
+    },
 }
 
 # =============================================================================
@@ -553,17 +618,9 @@ def load_single_file(
     if fmt in ("auto", ""):
         fmt = detect_format(path)
 
-    # NetCDF / HDF5 -------------------------------------------------------
-    if fmt in ("nc", "netcdf", "netcdf4", "nc4", "h5", "hdf5", "he5"):
+    # NetCDF --------------------------------------------------------------
+    if fmt in ("nc", "netcdf", "netcdf4", "nc4"):
         return xr.open_dataset(path), "xarray"
-
-    # Parquet -------------------------------------------------------------
-    if fmt == "parquet":
-        return pd.read_parquet(path), "dataframe"
-
-    # JSON ----------------------------------------------------------------
-    if fmt == "json":
-        return pd.read_json(path), "dataframe"
 
     # CSV / GeoCSV / TSV / tabular (Galaxy default) -----------------------
     # All delimited text formats go through the robust reader, which
@@ -607,8 +664,8 @@ def load_drias_zip(zip_path: str, extract_dir: str) -> Dict[str, xr.Dataset]:
         if not hits:
             hits = glob.glob(os.path.join(extract_dir, pattern))
         if hits:
-            datasets[varname] = xr.open_dataset(hits[0])
-            logging.info(f"  DRIAS {varname}: {Path(hits[0]).name}")
+            datasets[varname] = xr.open_dataset(sorted(hits)[0])
+            logging.info(f"  DRIAS {varname}: {Path(sorted(hits)[0]).name}")
         else:
             logging.warning(
                 f"  DRIAS: no file found for '{varname}' "
@@ -637,34 +694,73 @@ def find_var(
     return None
 
 
+def pick_drias_variable(ds: xr.Dataset, candidates: list) -> xr.DataArray:
+    """
+    Return the climate variable of a single-variable DRIAS file.
+
+    Known names are tried first; otherwise the first data variable with a
+    time dimension is used (this skips grid-mapping variables such as
+    'Lambert_Conformal' and auxiliary lat/lon arrays).
+    """
+    found = find_var(ds, candidates)
+    if found is not None:
+        return ds[found]
+    for name, da in ds.data_vars.items():
+        if any(d in da.dims for d in ("time", "valid_time")):
+            return da
+    raise ValueError(
+        f"No time-dependent variable found in DRIAS file "
+        f"(variables: {list(ds.data_vars)})."
+    )
+
+
+def build_custom_mapping(df: pd.DataFrame, args: argparse.Namespace) -> Dict:
+    """
+    Build a mapping table for the 'custom' source from the 1-based column
+    indices and unit choices given on the command line.
+    """
+    columns = {
+        "tasmax": (args.col_tasmax, CUSTOM_UNIT_CONVERSIONS["temp"][args.unit_temp]),
+        "tasmin": (args.col_tasmin, CUSTOM_UNIT_CONVERSIONS["temp"][args.unit_temp]),
+        "rsds": (args.col_rsds, CUSTOM_UNIT_CONVERSIONS["rsds"][args.unit_rsds]),
+        "prtot": (args.col_prtot, CUSTOM_UNIT_CONVERSIONS["precip"][args.unit_precip]),
+        "etp": (args.col_etp, CUSTOM_UNIT_CONVERSIONS["etp"][args.unit_etp]),
+        "wind": (args.col_wind, CUSTOM_UNIT_CONVERSIONS["wind"][args.unit_wind]),
+        "hr": (args.col_hr, None),
+        "vapp": (args.col_vapp, None),
+    }
+    mapping: Dict = {}
+    for internal_name, (index, conversion) in columns.items():
+        if index is None:
+            continue
+        mapping[internal_name] = {
+            "names": [column_name_from_index(df, index)],
+            "conversion": conversion,
+        }
+    return mapping
+
+
+def column_name_from_index(df: pd.DataFrame, index: int) -> str:
+    """Translate a 1-based Galaxy column index into a DataFrame column."""
+    if not 1 <= index <= len(df.columns):
+        raise ValueError(
+            f"Column {index} does not exist: the file has "
+            f"{len(df.columns)} columns ({list(df.columns)})."
+        )
+    return df.columns[index - 1]
+
+
 def apply_mapping(
     data: Union[xr.Dataset, pd.DataFrame],
     mapping: Dict,
     wind_factor: float = 0.7,
-    extra_mapping: Optional[Dict] = None,
 ) -> Dict:
     """
     Scan *data* for every variable defined in *mapping*, apply unit
     conversions and return a dict ``{internal_name: array-like}``.
-
-    *extra_mapping* (JSON dict from user) adds or overrides name aliases.
     """
-    # Merge user overrides: {"tasmax": "T_max"} → extend names list
-    effective_mapping: Dict = {k: dict(v) for k, v in mapping.items()}
-    if extra_mapping:
-        for internal_key, source_name in extra_mapping.items():
-            if internal_key in effective_mapping:
-                effective_mapping[internal_key]["names"] = (
-                    [source_name] + effective_mapping[internal_key]["names"]
-                )
-            else:
-                effective_mapping[internal_key] = {
-                    "names": [source_name],
-                    "conversion": None,
-                }
-
     result: Dict = {}
-    for internal_name, info in effective_mapping.items():
+    for internal_name, info in mapping.items():
         found = find_var(data, info["names"])
         if found is None:
             logging.debug(
@@ -783,6 +879,7 @@ def assign_cells_from_shapefile(
 ) -> xr.Dataset:
     """Rasterize the cell shapefile onto the xarray grid."""
     ds.rio.write_crs(epsg, inplace=True)
+    x_dim, y_dim = spatial_dims(ds)
     cell_gdf = gpd.read_file(shapefile_path).to_crs(ds.rio.crs)
 
     if "cell" not in cell_gdf.columns:
@@ -794,14 +891,43 @@ def assign_cells_from_shapefile(
     cell_raster = rasterize(
         [(geom, int(val)) for geom, val in
          zip(cell_gdf.geometry, cell_gdf["cell"])],
-        out_shape=(ds.sizes["y"], ds.sizes["x"]),
+        out_shape=(ds.sizes[y_dim], ds.sizes[x_dim]),
         transform=ds.rio.transform(),
         fill=-1,
     )
-    ds["cell_id"] = (("y", "x"), cell_raster)
+    ds["cell_id"] = ((y_dim, x_dim), cell_raster)
     logging.info(
         f"  rasterised {len(cell_gdf)} cells onto "
-        f"{ds.sizes['x']}×{ds.sizes['y']} grid"
+        f"{ds.sizes[x_dim]}×{ds.sizes[y_dim]} grid"
+    )
+    return ds
+
+
+def spatial_dims(ds: xr.Dataset) -> Tuple[str, str]:
+    """
+    Return the (x, y) dimension names of a gridded dataset: 'x'/'y' for
+    projected grids (SAFRAN, DRIAS), 'longitude'/'latitude' for ERA5 CDS
+    files, 'lon'/'lat' for others (detected by rioxarray).
+    """
+    try:
+        return ds.rio.x_dim, ds.rio.y_dim
+    except Exception as exc:  # rioxarray raises MissingSpatialDimensionError
+        raise ValueError(
+            "Cannot find the spatial dimensions of the NetCDF file "
+            "(expected x/y, longitude/latitude or lon/lat). "
+            f"Dimensions found: {list(ds.dims)}"
+        ) from exc
+
+
+def assign_cells_per_pixel(ds: xr.Dataset) -> xr.Dataset:
+    """Give every grid pixel its own integer cell ID (row-major order)."""
+    x_dim, y_dim = spatial_dims(ds)
+    n_y, n_x = ds.sizes[y_dim], ds.sizes[x_dim]
+    yy, xx = np.mgrid[0:n_y, 0:n_x]
+    ds["cell_id"] = ((y_dim, x_dim), (yy * n_x + xx).astype(int))
+    logging.warning(
+        "No shapefile provided; each grid pixel is treated as its own "
+        f"cell (IDs 0..{n_y * n_x - 1}, row-major order)."
     )
     return ds
 
@@ -839,22 +965,38 @@ def xarray_to_flat_df(
 # DATE / TIME COLUMNS
 # =============================================================================
 
-def add_temporal_columns(df: pd.DataFrame) -> pd.DataFrame:
+DATE_COLUMN_CANDIDATES = [
+    "time", "valid_time", "date", "Date", "DATE", "Time", "date_j",
+]
+
+
+def parse_dates(values: pd.Series) -> pd.Series:
+    """
+    Parse a date column. Integer dates such as Météo-France SIM2
+    ``20200131`` are read as YYYYMMDD (and not as epoch nanoseconds).
+    """
+    if pd.api.types.is_numeric_dtype(values):
+        return pd.to_datetime(values.astype("int64").astype(str),
+                              format="%Y%m%d")
+    return pd.to_datetime(values)
+
+
+def add_temporal_columns(
+    df: pd.DataFrame,
+    time_col: Optional[str] = None,
+) -> pd.DataFrame:
     """Add Year / Month / Day of month / Day of year from a time column."""
-    time_col = next(
-        (c for c in ["time", "date", "Date", "DATE", "Time"]
-         if c in df.columns),
-        None,
-    )
     if time_col is None:
-        if "Year" in df.columns:
-            return df          # already has STICS columns
+        time_col = next(
+            (c for c in DATE_COLUMN_CANDIDATES if c in df.columns), None
+        )
+    if time_col is None:
         raise ValueError(
             "Cannot find a date/time column. "
-            "Expected one of: time, date, Date, DATE."
+            f"Expected one of: {', '.join(DATE_COLUMN_CANDIDATES)}."
         )
 
-    dt = pd.to_datetime(df[time_col])
+    dt = parse_dates(df[time_col])
     df["Year"] = dt.dt.year
     df["Month"] = dt.dt.month
     df["Day of month"] = dt.dt.day
@@ -871,6 +1013,20 @@ STICS_COLUMNS = [
     "Year", "Month", "Day of month", "Day of year",
     "tasmin", "tasmax", "rsds", "etp", "prtot", "wind", "vapp",
 ]
+
+# Space-separated, right-aligned columns, as in the weather files shipped
+# with JavaSTICS ("lusigna 1996  1  1   1     8.0   11.1 ..."): station,
+# year, month, day, day of year, then the 8 daily values and CO2. Every
+# field is preceded by at least one space, whatever its width.
+STICS_LINE_FORMAT = "%d %4d %2d %2d %3d" + " %7.2f" * 8
+
+
+def write_stics_file(df_y: pd.DataFrame, out_path: str) -> None:
+    """Write one STICS weather file (one cell, one year, no header)."""
+    values = df_y.to_numpy(dtype=float)
+    values[np.isnan(values)] = STICS_MISSING
+    with open(out_path, "w", encoding="ascii", newline="\n") as fh:
+        np.savetxt(fh, values, fmt=STICS_LINE_FORMAT)
 
 
 def export_stics_files(
@@ -898,9 +1054,22 @@ def export_stics_files(
 
     df = df[df["Cell ID"] != -1].copy()
 
-    # Keep only columns defined in the STICS schema, plus any extras present
-    available = [c for c in STICS_COLUMNS if c in df.columns]
-    df = df[available]
+    # Every STICS column must be present, in the STICS order. A variable
+    # that the source does not provide is written as missing (-999.9).
+    for col in STICS_COLUMNS:
+        if col not in df.columns:
+            logging.warning(
+                f"  '{col}' not available from this source: written as "
+                f"{STICS_MISSING} (missing value) in every STICS file"
+            )
+            df[col] = STICS_MISSING
+    df = df[STICS_COLUMNS]
+
+    n_missing = int(df[STICS_COLUMNS[5:]].isna().sum().sum())
+    if n_missing:
+        logging.warning(
+            f"  {n_missing} missing daily values written as {STICS_MISSING}"
+        )
 
     cells = sorted(df["Cell ID"].unique())
     n_cells = len(cells)
@@ -929,13 +1098,7 @@ def export_stics_files(
             df_y = df_y.drop(columns=["year"], errors="ignore")
 
             out_path = os.path.join(c_dir, f"{int(cell_id)}.{int(year)}")
-            df_y.to_csv(
-                out_path,
-                index=False,
-                header=False,
-                sep="\t",
-                float_format="%.2f",
-            )
+            write_stics_file(df_y[STICS_COLUMNS + ["co2"]], out_path)
             files_written += 1
 
     logging.info(f"  {files_written} STICS files written")
@@ -961,21 +1124,290 @@ def zip_directory(src_dir: str, dst_zip: str) -> None:
 # MAIN PIPELINE
 # =============================================================================
 
+def extract_shapefile(shapefile_zip: str, tmpdir: str) -> str:
+    """Extract a zipped shapefile and return the path of its .shp file."""
+    shp_dir = os.path.join(tmpdir, "shapefile")
+    os.makedirs(shp_dir, exist_ok=True)
+    with zipfile.ZipFile(shapefile_zip, "r") as zf:
+        zf.extractall(shp_dir)
+    shp_hits = sorted(Path(shp_dir).rglob("*.shp"))
+    if not shp_hits:
+        raise ValueError("No .shp file found inside the shapefile ZIP.")
+    logging.info(f"shapefile: {shp_hits[0].name}")
+    return str(shp_hits[0])
+
+
+def gridded_to_dataframe(
+    vars_dict: Dict,
+    epsg: str,
+    shapefile_path: Optional[str],
+) -> pd.DataFrame:
+    """Assign cells to a gridded dataset and flatten it to a DataFrame."""
+    clim_ds = build_xarray_dataset(vars_dict)
+    clim_ds.rio.write_crs(epsg, inplace=True)
+
+    if shapefile_path:
+        logging.info("--- Rasterising cells ---")
+        clim_ds = assign_cells_from_shapefile(clim_ds, shapefile_path, epsg)
+    else:
+        clim_ds = assign_cells_per_pixel(clim_ds)
+
+    df = xarray_to_flat_df(clim_ds, drop_cols=["spatial_ref"])
+    df["Cell ID"] = df["cell_id"].astype(int)
+    df = add_temporal_columns(df)
+    return average_pixels_per_cell(df)
+
+
+DATE_KEYS = ["Cell ID", "Year", "Month", "Day of month", "Day of year"]
+
+
+def average_pixels_per_cell(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    STICS needs one row per day. When a shapefile cell covers several grid
+    pixels, the daily values of these pixels are averaged.
+    """
+    df = df[df["Cell ID"] != -1]
+    pixels = df.groupby(DATE_KEYS).size()
+    if pixels.max() <= 1:
+        return df
+    n_cells = int((pixels.groupby(level="Cell ID").max() > 1).sum())
+    logging.info(
+        f"  {n_cells} cell(s) cover several grid pixels (up to "
+        f"{int(pixels.max())}): daily values averaged over each cell"
+    )
+    value_cols = [c for c in STICS_COLUMNS[5:] if c in df.columns]
+    return df.groupby(DATE_KEYS, as_index=False)[value_cols].mean()
+
+
+def check_one_row_per_day(df: pd.DataFrame) -> None:
+    """Fail on duplicated (cell, date) rows in tabular data."""
+    dup = df.duplicated(subset=DATE_KEYS, keep=False)
+    if dup.any():
+        sample = df.loc[dup, DATE_KEYS].head(3).to_dict("records")
+        raise ValueError(
+            f"{int(dup.sum())} rows share the same cell/site and date "
+            f"(e.g. {sample}). If the file holds several sites, select "
+            "the column that identifies them."
+        )
+
+
+def assign_cell_ids(df: pd.DataFrame, cell_col: Optional[str]) -> pd.DataFrame:
+    """
+    Fill the 'Cell ID' column from *cell_col*.
+
+    - no column: every row belongs to a single site, Cell ID 1;
+    - integer IDs: used as is;
+    - other IDs (site codes...): numbered 1..N in sorted order, the
+      correspondence being written to the log.
+    """
+    if cell_col is None:
+        logging.info(
+            "  no cell/site ID column selected: all rows are treated as "
+            "a single site (Cell ID 1)"
+        )
+        df["Cell ID"] = 1
+        return df
+
+    logging.info(f"  cell/site ID column: '{cell_col}'")
+    ids = pd.to_numeric(df[cell_col], errors="coerce")
+    is_integer = (
+        ids.notna().all()
+        and np.all(np.mod(ids, 1) == 0)
+    )
+    if is_integer:
+        df["Cell ID"] = ids.astype(int)
+        return df
+
+    codes, uniques = pd.factorize(df[cell_col], sort=True)
+    df["Cell ID"] = np.where(codes >= 0, codes + 1, -1)
+    logging.info(
+        f"  '{cell_col}' does not hold integer IDs; sites numbered 1..N:"
+    )
+    for number, label in enumerate(uniques, start=1):
+        logging.info(f"    {number} = {label}")
+    return df
+
+
+def load_drias(
+    args: argparse.Namespace,
+    tmpdir: str,
+    shapefile_path: Optional[str],
+) -> pd.DataFrame:
+    """DRIAS-2020 branch: one NetCDF file per variable inside a ZIP."""
+    if not shapefile_path:
+        raise ValueError(
+            "DRIAS NetCDF data requires --shapefile_zip to assign cells."
+        )
+
+    logging.info("--- Loading DRIAS NetCDF files ---")
+    drias_dir = os.path.join(tmpdir, "drias")
+    os.makedirs(drias_dir, exist_ok=True)
+    drias_datasets = load_drias_zip(args.drias_zip, drias_dir)
+    if not drias_datasets:
+        raise ValueError("No DRIAS NetCDF file found in the ZIP archive.")
+
+    vars_dict: Dict = {}
+    for var_key, ds in drias_datasets.items():
+        info = DRIAS_MAPPING[var_key]
+        da = pick_drias_variable(ds, info["names"])
+        vars_dict[var_key] = apply_conversion(
+            da, info["conversion"], args.wind_correction_factor
+        )
+        logging.info(
+            f"  mapped '{da.name}' → '{var_key}'  "
+            f"(conversion: {info['conversion']})"
+        )
+
+    logging.info("--- Computing derived variables ---")
+    vars_dict = compute_derived_variables(
+        vars_dict, args.wind_correction_factor
+    )
+    return gridded_to_dataframe(vars_dict, args.epsg, shapefile_path)
+
+
+def load_input_files(
+    paths: List[str],
+    fmt: str,
+) -> Tuple[Union[xr.Dataset, pd.DataFrame], str]:
+    """Load one file, or concatenate several tabular files (one per site)."""
+    if len(paths) == 1:
+        return load_single_file(paths[0], fmt)
+
+    frames = []
+    for path in paths:
+        data, data_type = load_single_file(path, fmt)
+        if data_type != "dataframe":
+            raise ValueError(
+                "Several input files can only be combined when they are "
+                "tabular (CSV / TSV)."
+            )
+        frames.append(data)
+    logging.info(f"  {len(frames)} tabular files concatenated")
+    return pd.concat(frames, ignore_index=True), "dataframe"
+
+
+def select_mapping(
+    raw_data: Union[xr.Dataset, pd.DataFrame],
+    args: argparse.Namespace,
+) -> Tuple[Union[xr.Dataset, pd.DataFrame], Dict]:
+    """Choose the variable mapping table for a single-file source."""
+    is_tabular = isinstance(raw_data, pd.DataFrame)
+
+    if args.source_type == "custom":
+        if not is_tabular:
+            raise ValueError("The custom source only accepts tabular files.")
+        return raw_data, build_custom_mapping(raw_data, args)
+
+    base_mapping = ALL_MAPPINGS[args.source_type]
+
+    # Météo-France SIM2 (SAFRAN reanalysis): detected by its signature
+    # columns, switched to the dedicated mapping with correct units.
+    if args.source_type == "safran" and is_tabular:
+        sim2_signature = {"TINF_H_Q", "TSUP_H_Q", "SSI_Q"}
+        if sim2_signature & set(raw_data.columns):
+            logging.info("  detected Météo-France SIM2 columns → SIM2 mapping")
+            raw_data = raw_data.copy()
+            # Total precipitation = liquid + solid (snow)
+            if {"PRELIQ_Q", "PRENEI_Q"} <= set(raw_data.columns):
+                raw_data["prtot"] = (
+                    raw_data["PRELIQ_Q"].fillna(0)
+                    + raw_data["PRENEI_Q"].fillna(0)
+                )
+                logging.info("  derived: prtot = PRELIQ_Q + PRENEI_Q")
+            base_mapping = SIM2_MAPPING
+
+    # Open-Meteo daily archive (ERA5 Daily Extractor output): Open-Meteo
+    # column names, units already converted except wind (km/h).
+    if args.source_type == "era5" and is_tabular:
+        openmeteo_signature = {
+            "temperature_2m_max", "et0_fao_evapotranspiration",
+            "shortwave_radiation_sum",
+        }
+        if openmeteo_signature & set(raw_data.columns):
+            logging.info(
+                "  detected Open-Meteo columns → Open-Meteo mapping "
+                "(units already converted; wind km/h→m/s)"
+            )
+            base_mapping = OPENMETEO_MAPPING
+
+    return raw_data, base_mapping
+
+
+def load_single_source(
+    args: argparse.Namespace,
+    shapefile_path: Optional[str],
+) -> pd.DataFrame:
+    """ERA5 / SAFRAN / AgroClim / custom branch (one or more files)."""
+    logging.info(f"--- Loading {args.source_type} file(s) ---")
+    raw_data, data_type = load_input_files(args.input_file, args.input_format)
+    logging.info(f"  loaded as {data_type} (format: {args.input_format})")
+
+    raw_data, base_mapping = select_mapping(raw_data, args)
+    vars_dict = apply_mapping(
+        raw_data, base_mapping, args.wind_correction_factor
+    )
+
+    if not vars_dict:
+        present = (
+            list(raw_data.data_vars) if isinstance(raw_data, xr.Dataset)
+            else list(raw_data.columns)
+        )
+        expected = sorted({
+            alias
+            for info in base_mapping.values()
+            for alias in info["names"]
+        })
+        raise ValueError(
+            "No climate variable could be mapped for source "
+            f"'{args.source_type}'.\n"
+            f"  Variables found in the file : {present}\n"
+            f"  Names expected ({args.source_type}) : {expected}\n"
+            "  → Check the delimiter / header of your file, or use the "
+            "'custom' source to select the columns yourself."
+        )
+
+    logging.info("--- Computing derived variables ---")
+    vars_dict = compute_derived_variables(
+        vars_dict, args.wind_correction_factor
+    )
+
+    # ---- gridded NetCDF ----------------------------------------------
+    if data_type == "xarray":
+        return gridded_to_dataframe(vars_dict, args.epsg, shapefile_path)
+
+    # ---- tabular -----------------------------------------------------
+    df = raw_data.copy()
+    for col, series in vars_dict.items():
+        df[col] = series
+
+    if args.source_type == "agroclim":
+        if AGROCLIM_STATION_COLUMN not in df.columns:
+            raise ValueError(
+                f"Column '{AGROCLIM_STATION_COLUMN}' not found: this does "
+                "not look like an AgroClim daily station file. Columns "
+                f"present: {list(raw_data.columns)}"
+            )
+        cell_col: Optional[str] = AGROCLIM_STATION_COLUMN
+    elif args.cell_id_column_index is not None:
+        cell_col = column_name_from_index(raw_data, args.cell_id_column_index)
+    else:
+        cell_col = None
+    df = assign_cell_ids(df, cell_col)
+
+    time_col = (
+        column_name_from_index(raw_data, args.col_date)
+        if args.source_type == "custom" else None
+    )
+    df = add_temporal_columns(df, time_col)
+    check_one_row_per_day(df)
+    return df
+
+
 def run(args: argparse.Namespace) -> None:
     logging.info(f"=== Climate to STICS v{__version__} ===")
     logging.info(f"source_type : {args.source_type}")
     logging.info(f"epsg        : {args.epsg}")
     logging.info(f"wind factor : {args.wind_correction_factor}")
-
-    # Parse user JSON mapping override
-    extra_mapping: Optional[Dict] = None
-    if args.custom_var_mapping:
-        try:
-            extra_mapping = json.loads(args.custom_var_mapping)
-            logging.info(f"custom mapping: {extra_mapping}")
-        except json.JSONDecodeError as exc:
-            logging.error(f"Invalid JSON in --custom_var_mapping: {exc}")
-            sys.exit(1)
 
     # Build CO2 table automatically: live Mauna Loa (1959+) + ice core (<1959)
     logging.info("--- Building CO2 table (Mauna Loa + ice core) ---")
@@ -985,233 +1417,16 @@ def run(args: argparse.Namespace) -> None:
         output_dir = os.path.join(tmpdir, "stics_output")
         os.makedirs(output_dir, exist_ok=True)
 
-        # ── Extract shapefile (optional) ─────────────────────────────
-        shapefile_path: Optional[str] = None
-        if args.shapefile_zip:
-            shp_dir = os.path.join(tmpdir, "shapefile")
-            os.makedirs(shp_dir, exist_ok=True)
-            with zipfile.ZipFile(args.shapefile_zip, "r") as zf:
-                zf.extractall(shp_dir)
-            shp_hits = list(Path(shp_dir).rglob("*.shp"))
-            if not shp_hits:
-                logging.error("No .shp file found inside the shapefile ZIP.")
-                sys.exit(1)
-            shapefile_path = str(shp_hits[0])
-            logging.info(f"shapefile: {shapefile_path}")
+        shapefile_path = (
+            extract_shapefile(args.shapefile_zip, tmpdir)
+            if args.shapefile_zip else None
+        )
 
-        # ── Branch: DRIAS (multiple NetCDF) ──────────────────────────
         if args.source_type == "drias":
-            logging.info("--- Loading DRIAS NetCDF files ---")
-            drias_dir = os.path.join(tmpdir, "drias")
-            os.makedirs(drias_dir, exist_ok=True)
-            drias_datasets = load_drias_zip(args.drias_zip, drias_dir)
-
-            mapping = DRIAS_MAPPING
-            vars_dict: Dict = {}
-
-            for var_key, ds in drias_datasets.items():
-                info = mapping.get(var_key, {})
-                da = list(ds.data_vars.values())[0]
-                converted = apply_conversion(
-                    da, info.get("conversion"), args.wind_correction_factor
-                )
-                vars_dict[var_key] = converted
-
-            if extra_mapping:
-                # Load extra variables from the first available DRIAS file
-                first_ds = next(iter(drias_datasets.values()))
-                extra = apply_mapping(
-                    first_ds, {}, args.wind_correction_factor, extra_mapping
-                )
-                vars_dict.update(extra)
-
-            logging.info("--- Computing derived variables ---")
-            vars_dict = compute_derived_variables(
-                vars_dict, args.wind_correction_factor
-            )
-
-            clim_ds = build_xarray_dataset(vars_dict)
-            clim_ds.rio.write_crs(args.epsg, inplace=True)
-
-            if shapefile_path:
-                logging.info("--- Rasterising cells ---")
-                clim_ds = assign_cells_from_shapefile(
-                    clim_ds, shapefile_path, args.epsg
-                )
-            else:
-                raise ValueError(
-                    "DRIAS NetCDF data requires a --shapefile_zip to "
-                    "assign cells."
-                )
-
-            df = xarray_to_flat_df(
-                clim_ds,
-                drop_cols=["spatial_ref"],
-            )
-            df["Cell ID"] = df["cell_id"].astype(int)
-            df = add_temporal_columns(df)
-
-        # ── Branch: ERA5 / SAFRAN / custom (single file) ─────────────
+            df = load_drias(args, tmpdir, shapefile_path)
         else:
-            logging.info(f"--- Loading {args.source_type} file ---")
-            fmt = (
-                args.input_format
-                if args.input_format not in ("auto", "")
-                else detect_format(args.input_file)
-            )
-            raw_data, data_type = load_single_file(args.input_file, fmt)
-            logging.info(f"  loaded as {data_type} (format detected: {fmt})")
+            df = load_single_source(args, shapefile_path)
 
-            base_mapping = ALL_MAPPINGS.get(args.source_type, {})
-
-            # Auto-detect Météo-France SIM2 (SAFRAN reanalysis) by its
-            # signature columns, and switch to the dedicated mapping with
-            # correct units.
-            is_tabular = isinstance(raw_data, pd.DataFrame)
-            if args.source_type == "safran" and is_tabular:
-                sim2_signature = {"TINF_H_Q", "TSUP_H_Q", "SSI_Q"}
-                if sim2_signature & set(raw_data.columns):
-                    logging.info(
-                        "  detected Météo-France SIM2 columns → "
-                        "SIM2 mapping"
-                    )
-                    raw_data = raw_data.copy()
-                    # Total precipitation = liquid + solid (snow)
-                    if {"PRELIQ_Q", "PRENEI_Q"} <= set(raw_data.columns):
-                        raw_data["prtot"] = (
-                            raw_data["PRELIQ_Q"].fillna(0)
-                            + raw_data["PRENEI_Q"].fillna(0)
-                        )
-                        logging.info("  derived: prtot = PRELIQ_Q + PRENEI_Q")
-                    elif "PRELIQ_Q" in raw_data.columns:
-                        raw_data["prtot"] = raw_data["PRELIQ_Q"]
-                    base_mapping = SIM2_MAPPING
-
-            # Auto-detect Open-Meteo daily archive (ERA5 Daily Extractor
-            # output). Its columns use Open-Meteo naming and are already
-            # unit-converted.
-            is_tabular = isinstance(raw_data, pd.DataFrame)
-            if args.source_type == "era5" and is_tabular:
-                openmeteo_signature = {
-                    "temperature_2m_max", "et0_fao_evapotranspiration",
-                    "shortwave_radiation_sum",
-                }
-                if openmeteo_signature & set(raw_data.columns):
-                    logging.info(
-                        "  detected Open-Meteo columns → Open-Meteo mapping "
-                        "(units already converted; wind km/h→m/s)"
-                    )
-                    base_mapping = OPENMETEO_MAPPING
-
-            vars_dict = apply_mapping(
-                raw_data, base_mapping, args.wind_correction_factor,
-                extra_mapping
-            )
-
-            if not vars_dict:
-                is_xr_ds = isinstance(raw_data, xr.Dataset)
-                present = (
-                    list(raw_data.data_vars) if is_xr_ds
-                    else list(raw_data.columns)
-                )
-                expected = sorted({
-                    alias
-                    for info in base_mapping.values()
-                    for alias in info["names"]
-                })
-                raise ValueError(
-                    "No climate variable could be mapped for source "
-                    f"'{args.source_type}'.\n"
-                    f"  Columns found in the file : {present}\n"
-                    f"  Names expected ({args.source_type}) : {expected}\n"
-                    "  → Check the delimiter / header of your file, or "
-                    "supply a --custom_var_mapping JSON to match your "
-                    "column names."
-                )
-
-            logging.info("--- Computing derived variables ---")
-            vars_dict = compute_derived_variables(
-                vars_dict, args.wind_correction_factor
-            )
-
-            # ---- xarray path (gridded NetCDF) -------------------------
-            if data_type == "xarray":
-                clim_ds = build_xarray_dataset(vars_dict)
-                clim_ds.rio.write_crs(args.epsg, inplace=True)
-
-                if shapefile_path:
-                    logging.info("--- Rasterising cells ---")
-                    clim_ds = assign_cells_from_shapefile(
-                        clim_ds, shapefile_path, args.epsg
-                    )
-                elif "cell_id" not in clim_ds.data_vars:
-                    # Auto-assign a unique integer per (lat, lon) cell
-                    logging.warning(
-                        "No shapefile provided; each (lat,lon) grid cell "
-                        "will be treated as its own cell."
-                    )
-                    yy, xx = np.mgrid[
-                        0:clim_ds.sizes["y"],
-                        0:clim_ds.sizes["x"],
-                    ]
-                    clim_ds["cell_id"] = (
-                        ("y", "x"),
-                        (yy * clim_ds.sizes["x"] + xx).astype(int),
-                    )
-
-                df = xarray_to_flat_df(clim_ds, drop_cols=["spatial_ref"])
-                df["Cell ID"] = df["cell_id"].astype(int)
-                df = add_temporal_columns(df)
-
-            # ---- DataFrame path (tabular) -----------------------------
-            else:
-                df = raw_data.copy()
-                # Inject converted/derived columns back into df
-                for col, series in vars_dict.items():
-                    if isinstance(series, (pd.Series, np.ndarray)):
-                        df[col] = series
-
-                # Assign cell ID
-                cell_col = args.cell_id_column or "cell"
-                if cell_col not in df.columns:
-                    fallbacks = ["site_id", "cell", "SITE_ID", "id", "ID",
-                                 "gid", "cell_id"]
-                    alt = next((c for c in fallbacks if c in df.columns), None)
-                    if alt:
-                        logging.info(
-                            f"  cell id column '{cell_col}' not found; "
-                            f"using '{alt}' instead"
-                        )
-                        cell_col = alt
-
-                if cell_col in df.columns:
-                    try:
-                        df["Cell ID"] = df[cell_col].astype(int)
-                    except (ValueError, TypeError):
-                        # Non-numeric IDs (e.g. site codes) → stable
-                        # integer codes
-                        codes, _ = pd.factorize(df[cell_col])
-                        df["Cell ID"] = codes.astype(int)
-                        logging.info(
-                            f"  '{cell_col}' is non-integer; mapped to "
-                            "integer codes (0..N-1)"
-                        )
-                elif shapefile_path:
-                    raise ValueError(
-                        "Tabular data + shapefile rasterisation is not "
-                        "supported. Convert to NetCDF or provide a cell "
-                        "ID column."
-                    )
-                else:
-                    raise ValueError(
-                        f"Cannot find cell ID column '{cell_col}'. "
-                        f"Columns present: {list(df.columns)}. "
-                        "Set --cell_id_column to the correct column name."
-                    )
-
-                df = add_temporal_columns(df)
-
-        # ── Export ───────────────────────────────────────────────────
         logging.info("--- Exporting STICS files ---")
         n_files = export_stics_files(df, co2_df, output_dir)
 
@@ -1228,8 +1443,8 @@ def run(args: argparse.Namespace) -> None:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description=(
-            "Transform climate data (ERA5 / SAFRAN / DRIAS / custom) "
-            "into STICS daily input files."
+            "Transform climate data (ERA5 / SAFRAN / DRIAS / AgroClim / "
+            "custom) into STICS daily input files."
         )
     )
     p.add_argument("--version", action="version", version=__version__)
@@ -1238,17 +1453,18 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--source_type",
         required=True,
-        choices=["era5", "safran", "drias", "custom"],
+        choices=["era5", "safran", "drias", "agroclim", "custom"],
     )
 
     # Input files
     p.add_argument(
-        "--input_file",
-        help="Single climate data file (ERA5/SAFRAN/custom)",
+        "--input_file", nargs="+",
+        help="Climate data file(s). Several tabular files (e.g. one per "
+             "AgroClim station) are concatenated.",
     )
     p.add_argument(
         "--input_format", default="auto",
-        help="File format: netcdf | csv | tsv | json | parquet | auto",
+        help="File format: netcdf | tabular | csv | tsv | auto",
     )
     p.add_argument(
         "--drias_zip",
@@ -1256,30 +1472,58 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Spatial
-    p.add_argument("--epsg",            default="EPSG:4326")
-    p.add_argument("--shapefile_zip",   default=None)
-    p.add_argument("--cell_id_column",  default="cell")
-
-    # CO2 is now fetched automatically (Mauna Loa live + ice core fallback);
-    # no --path_to_co2 argument is needed anymore.
+    p.add_argument("--epsg", default="EPSG:4326")
+    p.add_argument("--shapefile_zip", default=None)
+    p.add_argument(
+        "--cell_id_column_index", type=int, default=None,
+        help="1-based index of the cell/site ID column (tabular data). "
+             "Without it, all rows form a single site with Cell ID 1.",
+    )
 
     # Advanced
     p.add_argument("--wind_correction_factor", type=float, default=0.7)
-    p.add_argument("--custom_var_mapping", default=None,
-                   help='JSON string: {"tasmax": "col_name", ...}')
+
+    # Custom source: 1-based column indices and units
+    custom = p.add_argument_group("custom source")
+    for name in ("date", "tasmax", "tasmin", "rsds", "prtot",
+                 "etp", "wind", "hr", "vapp"):
+        custom.add_argument(f"--col_{name}", type=int, default=None)
+    for name, choices in CUSTOM_UNIT_CONVERSIONS.items():
+        custom.add_argument(
+            f"--unit_{name}", choices=list(choices), default=list(choices)[0]
+        )
 
     # Output
-    p.add_argument("--output_zip",  required=True)
-    p.add_argument("--log_file",    default=None)
+    p.add_argument("--output_zip", required=True)
+    p.add_argument("--log_file", default=None)
 
-    return p.parse_args()
+    args = p.parse_args()
+
+    if args.source_type == "drias":
+        if not args.drias_zip:
+            p.error("--drias_zip is required for the 'drias' source")
+    elif not args.input_file:
+        p.error("--input_file is required for this source")
+
+    if args.source_type == "custom":
+        required = ("date", "tasmax", "tasmin", "rsds", "prtot")
+        missing = [n for n in required if getattr(args, f"col_{n}") is None]
+        if missing:
+            p.error(
+                "the custom source requires "
+                + ", ".join(f"--col_{n}" for n in missing)
+            )
+
+    return args
 
 
 def setup_logging(log_file: Optional[str]) -> None:
     fmt = "%(asctime)s [%(levelname)s] %(message)s"
     handlers = [logging.StreamHandler(sys.stdout)]
     if log_file:
-        handlers.append(logging.FileHandler(log_file, mode="w"))
+        handlers.append(
+            logging.FileHandler(log_file, mode="w", encoding="utf-8")
+        )
     logging.basicConfig(level=logging.INFO, format=fmt, handlers=handlers)
 
 

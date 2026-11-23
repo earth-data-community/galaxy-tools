@@ -11,22 +11,21 @@ name: climate_to_stics
 owner: climate
 description: Converts ERA5, SAFRAN/GeoSAS, DRIAS-2020 or custom daily climate data into STICS crop model input files
 long_description: |
-  Climate to STICS Format converts daily climate data from ERA5 (Copernicus
-  Climate Data Store), SAFRAN/GeoSAS (Meteo-France), DRIAS-2020 (bias-adjusted
-  CMIP5/6 climate projections), or a custom source, into the daily,
-  headerless TSV input files expected by the STICS crop model.
+  Converts daily weather data into the input files of the STICS crop model.
+  Supported sources are ERA5 (Open-Meteo daily tables or Copernicus CDS
+  NetCDF grids), SAFRAN (GeoSAS exports, Météo-France SIM2 files or NetCDF
+  grids), DRIAS-2020 climate projections (ZIP archive of NetCDF files), the
+  INRAE AgroClim weather station network (daily files from Recherche Data
+  Gouv, doi:10.57745/BQ0BWB) and custom tables whose columns and units are
+  selected in the form.
 
-  The tool automatically:
-    - renames and unit-converts climate variables depending on the source
-    - computes missing derived variables (mean temperature, relative
-      humidity, vapour pressure) when they are not already present
-    - assigns each pixel or row to a spatial cell, via a shapefile
-      (rasterised onto the input grid) or an existing cell-ID column
-    - retrieves and merges annual atmospheric CO2 concentrations
-      (NOAA/GML Mauna Loa record from 1959 onward, completed by a
-      pre-1959 ice-core record) with no extra input file required
-
-  Developed as part of the DairyFit project (INRAE).
+  Variables are renamed and converted to STICS units, vapour pressure and
+  wind speed at 2 m are derived when needed, and the annual atmospheric CO2
+  concentration (NOAA/GML Mauna Loa series from 1959, ice-core record
+  before) is appended. Gridded data are assigned to cells with a shapefile
+  (pixels averaged per cell) or kept pixel by pixel. The output is a ZIP
+  archive with one space-separated STICS file per cell and per year, plus a
+  processing log.
 homepage_url: https://forge.inrae.fr/dairyfit/lot1/chaine_traitement_indicateur
 remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/master/tools/climate_to_stics_format
 type: unrestricted
