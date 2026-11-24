@@ -1,7 +1,7 @@
 <tool id="rameau" name="Rameau" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="20.01">
     <description>Analysis and processing of hydrogeological data</description>
     <macros>
-        <token name="@TOOL_VERSION@">1.2.0</token>
+        <token name="@TOOL_VERSION@">1.2.1</token>
         <token name="@VERSION_SUFFIX@">0</token>
     </macros>
     <requirements>
