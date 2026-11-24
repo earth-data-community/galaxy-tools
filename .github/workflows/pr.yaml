@@ -130,7 +130,7 @@ jobs:
         key: pip_cache_py_${{ matrix.python-version }}_gxy_${{ needs.setup.outputs.galaxy-head-sha }}
     - name: Find Pull Request
       id: find-pr
-      uses: sharesight/find-github-pull-request@v1.3.0
+      uses: sharesight/find-github-pull-request@v1.4.0
       with:
         allowClosed: true
         failIfNotFound: true
