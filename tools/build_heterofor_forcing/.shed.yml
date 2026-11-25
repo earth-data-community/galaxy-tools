@@ -1,32 +1,24 @@
-name: build_heterofor_forcing
+name: climate_to_stics_format
 owner: climate
-description: Build hourly HETEROFOR forcing files from SAFRAN reanalysis data regridded onto RENECOFOR plots
+description: Convert daily weather data (ERA5, SAFRAN, DRIAS-2020, AgroClim or custom tables) into STICS crop model input files
 long_description: |
-  This tool builds hourly meteorological forcing files for the HETEROFOR
-  forest growth model at the 26 plots of the RENECOFOR network, starting
-  from SAFRAN reanalysis data (via the ORCHIDEE land surface model output
-  format) already regridded onto the RENECOFOR plot locations. For each
-  station it writes a forcing file with radiation, air temperature, soil
-  surface temperature, rainfall, relative humidity, wind speed and
-  direction, and diffuse-to-global radiation ratio, at an hourly time step.
+  Converts daily weather data into the input files of the STICS crop model.
+  Supported sources are ERA5 (Open-Meteo daily tables or Copernicus CDS
+  NetCDF grids), SAFRAN (GeoSAS exports, Météo-France SIM2 files or NetCDF
+  grids), DRIAS-2020 climate projections (ZIP archive of NetCDF files), the
+  INRAE AgroClim weather station network (daily files from Recherche Data
+  Gouv, doi:10.57745/BQ0BWB) and custom tables whose columns and units are
+  selected in the form.
 
-  Two modes are available. SAFRAN-only (default) builds forcing files
-  entirely from the regridded SAFRAN/ORCHIDEE data for every station with
-  complete records. RENECOFOR + SAFRAN additionally accepts observed
-  RENECOFOR meteorological data (as an RDS file): observations are used
-  first and gaps are filled from SAFRAN, with two extra summary reports
-  on how much data was filled or is still missing per station.
-
-  The two SAFRAN/PSurf inputs accept NetCDF, CSV, Parquet, or CoverageJSON,
-  auto-detected independently per file. Because the number of stations that
-  pass the completeness check can vary, outputs are returned as Galaxy list
-  collections rather than a fixed set of datasets.
-
-  This tool wraps a cleaned-up, parameterised version of an R script
-  originally written by Annemiek I Stegehuis to prepare SAFRAN/RENECOFOR
-  forcing data for HETEROFOR runs at the ALAMOD project plots.
-remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/master/tools/build_heterofor_forcing
-homepage_url: https://github.com/earth-data-community/galaxy-tools/tree/master/tools/build_heterofor_forcing
+  Variables are renamed and converted to STICS units, vapour pressure and
+  wind speed at 2 m are derived when needed, and the annual atmospheric CO2
+  concentration (NOAA/GML Mauna Loa series from 1959, ice-core record
+  before) is appended. Gridded data are assigned to cells with a shapefile
+  (pixels averaged per cell) or kept pixel by pixel. The output is a ZIP
+  archive with one space-separated STICS file per cell and per year, plus a
+  processing log.
+remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/climate_to_stics_format
+homepage_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/climate_to_stics_format
 type: unrestricted
 categories:
   - Climate Analysis
