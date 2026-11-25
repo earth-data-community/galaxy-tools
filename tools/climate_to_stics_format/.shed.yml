@@ -1,15 +1,6 @@
-# Galaxy Tool Shed repository metadata.
-# See: https://galaxy-iuc-standards.readthedocs.io/en/latest/best_practices/shed_yml.html
-#
-# TODO before publishing:
-#   - replace `owner` with your Tool Shed account name
-#   - double-check `categories` against the current list on your target
-#     Tool Shed instance (Browse by category); left empty below on purpose
-#     since the exact category names can change over time.
-
-name: climate_to_stics
+name: climate_to_stics_format
 owner: climate
-description: Converts ERA5, SAFRAN/GeoSAS, DRIAS-2020 or custom daily climate data into STICS crop model input files
+description: Convert daily weather data (ERA5, SAFRAN, DRIAS-2020, AgroClim or custom tables) into STICS crop model input files
 long_description: |
   Converts daily weather data into the input files of the STICS crop model.
   Supported sources are ERA5 (Open-Meteo daily tables or Copernicus CDS
@@ -26,8 +17,8 @@ long_description: |
   (pixels averaged per cell) or kept pixel by pixel. The output is a ZIP
   archive with one space-separated STICS file per cell and per year, plus a
   processing log.
-homepage_url: https://forge.inrae.fr/dairyfit/lot1/chaine_traitement_indicateur
-remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/master/tools/climate_to_stics_format
+remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/climate_to_stics_format
+homepage_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/climate_to_stics_format
 type: unrestricted
 categories:
-    -climate analysis
+  - Climate Analysis
