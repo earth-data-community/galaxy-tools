@@ -1,27 +1,31 @@
-<tool id="c3s" name="Copernicus Climate Data Store" version="0.3.1" profile="25.1">
+<tool id="c3s" name="Copernicus Climate Data Store" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>for retrieving climate data</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.3.1</token>
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
     <edam_topics>
         <edam_topic>topic_3855</edam_topic>
         <edam_topic>topic_3318</edam_topic>
-      </edam_topics>
-      <edam_operations>
+    </edam_topics>
+    <edam_operations>
         <edam_operation>operation_2422</edam_operation>
         <edam_operation>operation_3357</edam_operation>
         <edam_operation>operation_0335</edam_operation>
-      </edam_operations>
+    </edam_operations>
     <requirements>
         <requirement type="package" version="3.8">python</requirement>
         <requirement type="package" version="0.7.3">cdsapi</requirement>
         <requirement type="package" version="2.4.4">cdo</requirement>
         <requirement type="package" version="1.34">tar</requirement>
         <requirement type="package" version="6.0">unzip</requirement>
-		<credentials name="c3s_cds_apikey" version="1.0" label="CDS API key" description="Credential for accessing Copernicus climate Data Store API.">
+        <credentials name="c3s_cds_apikey" version="1.0" label="CDS API key" description="Credential for accessing Copernicus climate Data Store API.">
             <secret name="key" inject_as_env="CDS_API_KEY" optional="false" label="CDS API key" description="Your Copernicus climate Data Store API key."/>
         </credentials>
     </requirements>
-	<required_files>
+    <required_files>
         <include path="c3s_retrieve.py"/>
-		<include path="c3s.sh"/>
+        <include path="c3s.sh"/>
     </required_files>
     <command detect_errors="exit_code"><![CDATA[
        export HOME=`pwd`  &&
@@ -49,12 +53,12 @@ $is_file.api_req_text
                 <option value="yes" selected="true">yes</option>
                 <option value="no">no</option>
             </param>
-	       <when value="yes">
-	           <param name="api_req_file" type="data" label="API Request filename" format="txt"/>
-           </when>
-           <when value="no">
-	           <param name="api_req_text" type="text" label="Paste API Request" area="true" />
-           </when>
+            <when value="yes">
+                <param name="api_req_file" type="data" label="API Request filename" format="txt"/>
+            </when>
+            <when value="no">
+                <param name="api_req_text" type="text" label="Paste API Request" area="true"/>
+            </when>
         </conditional>
     </inputs>
     <outputs>
@@ -63,9 +67,9 @@ $is_file.api_req_text
     </outputs>
     <tests>
         <test expect_failure="true">
-			<conditional name="is_file">
+            <conditional name="is_file">
                 <param name="has_req" value="yes"/>
-                <param name="api_req_file" value="input.txt" />
+                <param name="api_req_file" value="input.txt"/>
             </conditional>
             <assert_stderr>
                 <has_text text="CDS retrieval failed, make sure you filled in your CDS API Key"/>
@@ -84,26 +88,65 @@ This tool is a wrapper to retrieve data from the Copernicus Climate Data Store.
 - Set your CDS API Key in the Credentials
 - Documentation on where to get the CDS API key can be found `here <https://cds.climate.copernicus.eu/how-to-api>`_.
 - Compose your request directly on C3S and extract the relevant information, which should be put in the input field "Request" or saved in a file. The format should be, for example::
-
-    import cdsapi
-    
-    c = cdsapi.Client()
-    c.retrieve(
-        'reanalysis-era5-single-levels-monthly-means',
-        {
-            'data_format': 'netcdf',
-            'product_type': 'monthly_averaged_reanalysis',
-            'variable': '2m_temperature',
-            'year': '2020',
-            'month': '12',
-            'time': '00:00',
-            'area': [60, 10, 59.5, 10.5],
-        },
-        'download.nc')
+	
+	import cdsapi
+	
+	dataset = "reanalysis-era5-single-levels-monthly-means"
+	request = {
+	    "product_type": ["monthly_averaged_reanalysis"],
+	    "variable": ["2m_temperature"],
+	    "year": ["2020"],
+	    "month": ["12"],
+	    "time": ["00:00"],
+	    "data_format": "grib",
+	    "download_format": "unarchived",
+	    "area": [60, 10, 59.5, 10.5]
+	}
+	
+	client = cdsapi.Client()
+	client.retrieve(dataset, request).download()
 
 
 - Be aware that for being able to download dataset from C3S, users also need to agree to licensing terms for each dataset of interest on the C3S website.
 
+**Essential Climate Variables**
+
+With the updates of the Copernicus Climate Data store you can now download ECV directly through here.
+An Essential Climate Variable is a physical, chemical or biological variable or a group of linked variables
+that critically contributes to the characterization of Earth’ s climate.
+
+The Essential Climate Variables for assessment of climate variability from 1979 to present dataset contains
+a selection of climatologies and monthly anomalies of Essential Climate Variables (ECVs) suitable for
+monitoring and assessment of climate variability and change. Selection criteria are based on accuracy
+and temporal consistency on monthly to decadal time scales. The ECV data products in this set have been
+estimated from multiple sources and, depending on the source, may have been adjusted to account for biases
+and other known deficiencies. Data sources and adjustment methods used are described in the Product User
+Guide, as are various particulars such as the baseline periods used to calculate monthly climatologies and
+the corresponding anomalies.
+
+
+- ECV: https://gcos.wmo.int/en/essential-climate-variables
+- Copernicus Climate Data Store documentation on Essential Climate Variables:
+  cds.climate.copernicus.eu/cdsapp#!/dataset/ecv-for-climate-change?tab=overview
+
+See climatedata.wmo.int/ for more information on Essential Climate Variables.
+
+It allows to retrieve estimates of Essential Climate Variables (ECVs)
+derived from Earth observations.
+
+Your API request should look like that::
+
+	import cdsapi
+		
+	dataset = "ecv-for-climate-change"
+	request = {
+		"data_format": "grib"
+	}
+	
+	client = cdsapi.Client()
+	client.retrieve(dataset, request).download()
+
+		
 License:
 ~~~~~~~~
 
@@ -112,7 +155,10 @@ Neither the European Commission nor ECMWF is responsible for any use
 that may be made of the Copernicus information or data it contains.
     ]]></help>
     <citations>
-	<citation type="bibtex">
+        <citation type="bibtex">
 	@misc{C3S2024,author={Copernicus Climate Change Service},year={2024}}</citation>
     </citations>
+    <creator>
+        <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+    </creator>
 </tool>

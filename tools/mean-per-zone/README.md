@@ -1,3 +1,9 @@
+---
+title: "Zonal statistics"
+date: 2026-08-26
+draft: false
+weight: 1
+---
 
 # Zonal statistics 
 

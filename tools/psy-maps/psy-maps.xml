@@ -1,11 +1,15 @@
-<tool id="psy_maps" name="map plot" version="1.3.1" profile="23.0">
+<tool id="psy_maps" name="map plot" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>gridded (lat/lon) netCDF data</description>
+    <macros>
+        <token name="@TOOL_VERSION@">1.3.1</token>
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
     <edam_topics>
-      <edam_topic>topic_3855</edam_topic>
-      <edam_topic>topic_3318</edam_topic>
+        <edam_topic>topic_3855</edam_topic>
+        <edam_topic>topic_3318</edam_topic>
     </edam_topics>
     <edam_operations>
-      <edam_operation>operation_0573</edam_operation>
+        <edam_operation>operation_0573</edam_operation>
     </edam_operations>
     <requirements>
         <requirement type="package" version="3">python</requirement>
@@ -15,6 +19,9 @@
         <requirement type="package" version="1.4.0">psy-reg</requirement>
         <requirement type="package" version="1.6.5">netcdf4</requirement>
     </requirements>
+    <required_files>
+        <include path="psymap_simple.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
        python3 '$__tool_directory__/psymap_simple.py'
             '$ifilename' '$variable'
@@ -33,8 +40,8 @@
        #end if
     ]]></command>
     <inputs>
-        <param name="ifilename" type="data" format="netcdf" label="input with geographical coordinates (netCDF format)"></param>
-        <param name="variable" type="text" value="TS" label="variable name as given in the netCDF file" />
+        <param name="ifilename" type="data" format="netcdf" label="input with geographical coordinates (netCDF format)"/>
+        <param name="variable" type="text" value="TS" label="variable name as given in the netCDF file"/>
         <section name="adv" title="Advanced Options" expanded="false">
             <conditional name="multiple_plot">
                 <param name="selector" type="select" label="multiple times">
@@ -42,14 +49,14 @@
                     <option value="no" selected="true">no</option>
                 </param>
                 <when value="yes">
-                    <param name="time" type="text" value="0" label="comma separated list of indexes for fields to plot" />
-                    <param name="format" type="text" value="%Y-%m-%d %H:%M:%S" label="date and time format" />
-                    <param name="ncol" type="integer" value="1" min="1" max="4" label="number of columns for subplot grid" />
-                    <param name="nrow" type="integer" value="1" min="1" max="20" label="number of rows for subplot grid" />
-                    <param name="title" type="text" value="" label="subplot title (repeated on each subplot)" />
+                    <param name="time" type="text" value="0" label="comma separated list of indexes for fields to plot"/>
+                    <param name="format" type="text" value="%Y-%m-%d %H:%M:%S" label="date and time format"/>
+                    <param name="ncol" type="integer" value="1" min="1" max="4" label="number of columns for subplot grid"/>
+                    <param name="nrow" type="integer" value="1" min="1" max="20" label="number of rows for subplot grid"/>
+                    <param name="title" type="text" value="" label="subplot title (repeated on each subplot)"/>
                 </when>
                 <when value="no">
-                    <param name="title" type="text" value="" label="plot title" />
+                    <param name="title" type="text" value="" label="plot title"/>
                 </when>
             </conditional>
             <param name="logscale" type="select" label="log scale the data">
@@ -154,25 +161,31 @@
     </outputs>
     <tests>
         <test>
-            <param name="ifilename" value="TS.f2000.T31T31.control.cam.h0.0014-12.nc" />
-            <param name="variable" value="TS" />
-            <param name="projection" value="" />
-            <param name="colormap" value="jet" />
+            <param name="ifilename" value="TS.f2000.T31T31.control.cam.h0.0014-12.nc"/>
+            <param name="variable" value="TS"/>
+            <section name="adv">
+                <param name="projection" value=""/>
+                <param name="colormap" value="jet"/>
+            </section>
             <output name="ofilename" ftype="png" file="TS.f2000.T31T31.control.cam.h0.0014-12.png" compare="sim_size" delta="500"/>
         </test>
         <test>
-            <param name="ifilename" value="TS.f2000.T31T31.control.cam.h0.0014-12.nc" />
-            <param name="variable" value="TS" />
-            <param name="projection" value="ortho" />
-            <param name="colormap" value="RdBu_r" />
+            <param name="ifilename" value="TS.f2000.T31T31.control.cam.h0.0014-12.nc"/>
+            <param name="variable" value="TS"/>
+            <section name="adv">
+                <param name="projection" value="ortho"/>
+                <param name="colormap" value="RdBu_r"/>
+            </section>
             <output name="ofilename" ftype="png" file="TS.f2000.T31T31.control.cam.h0.0014-12_ortho.png" compare="sim_size" delta="500"/>
         </test>
         <test>
-            <param name="ifilename" value="ESACCI-OC-L3S-CHLOR_A-20220601-RESIZED-fv6.0.nc" />
-            <param name="variable" value="chlor_a" />
-            <param name="projection" value="" />
-            <param name="colormap" value="jet" />
-            <param name="logscale" value="yes" />
+            <param name="ifilename" value="ESACCI-OC-L3S-CHLOR_A-20220601-RESIZED-fv6.0.nc"/>
+            <param name="variable" value="chlor_a"/>
+            <section name="adv">
+                <param name="projection" value=""/>
+                <param name="colormap" value="jet"/>
+                <param name="logscale" value="yes"/>
+            </section>
             <output name="ofilename" ftype="png" file="ESACCI-OC-L3S-CHLOR_A-20220601-RESIZED-fv6.0.png" compare="sim_size" delta="1500"/>
         </test>
     </tests>
@@ -236,4 +249,7 @@ psyplot and psy-maps can be found at https://psyplot.readthedocs.io/projects/psy
     <citations>
         <citation type="doi">10.21105/joss.00363</citation>
     </citations>
+    <creator>
+        <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+    </creator>
 </tool>

@@ -1,4 +1,4 @@
-<tool id="cdo_info" name="CDO get info" profile="20.05" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@">
+<tool id="cdo_info" name="CDO get info" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="@PROFILE@">
     <description>Climate Data Information Operators to get information on Climate and NWP model data</description>
     <macros>
         <import>macros.xml</import>
@@ -26,14 +26,14 @@
         <test>
             <param name="main_infile" ftype="netcdf" value="longitude.nc"/>
             <conditional name="information">
-                <param name="opt" value="info" />
+                <param name="opt" value="info"/>
             </conditional>
             <output name="info" value="longitude.txt" compare="diff" lines_diff="2"/>
         </test>
         <test>
             <param name="main_infile" ftype="netcdf" value="latitude.nc"/>
             <conditional name="information">
-                <param name="diff" value="info" />
+                <param name="opt" value="diff"/>
                 <param name="secondary_infile" ftype="netcdf" value="latitude_modified.nc"/>
             </conditional>
             <output name="info" value="latitude_diff.txt" compare="diff" lines_diff="2"/>
@@ -41,21 +41,21 @@
         <test>
             <param name="main_infile" ftype="netcdf" value="WMI_Lear.nc"/>
             <conditional name="information">
-                <param name="opt" value="showdate" />
+                <param name="opt" value="showdate"/>
             </conditional>
             <output name="info" value="WMI_Lear_showdate.txt" compare="diff" lines_diff="2"/>
         </test>
         <test>
             <param name="main_infile" ftype="netcdf" value="WMI_Lear.nc"/>
             <conditional name="information">
-                <param name="opt" value="griddes" />
+                <param name="opt" value="griddes"/>
             </conditional>
             <output name="info" value="WMI_Lear_griddes.txt" compare="diff" lines_diff="2"/>
         </test>
         <test>
             <param name="main_infile" ftype="netcdf" value="WMI_Lear.nc"/>
             <conditional name="information">
-                <param name="opt" value="showname" />
+                <param name="opt" value="showname"/>
             </conditional>
             <output name="info" value="WMI_Lear_names.txt" compare="diff" lines_diff="2"/>
         </test>
@@ -75,4 +75,5 @@ This tool is a wrapper to the Climate Data Operators (CDO) for all Information O
 
     ]]>    </help>
     <expand macro="citations"/>
+    <expand macro="creator"/>
 </tool>

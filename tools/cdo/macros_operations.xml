@@ -274,39 +274,39 @@
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="ens">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="zon">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="tim">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="vert">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="day">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="year">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="mon">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="seas">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="fld">
-                <expand macro="stat_selection" />
+                <expand macro="stat_selection"/>
                 <expand macro="add_cdo_input"/>
             </when>
             <when value="add">

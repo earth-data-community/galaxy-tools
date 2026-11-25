@@ -4,16 +4,15 @@ import argparse
 import warnings
 
 import geopandas
-
 import matplotlib as mpl
+import pandas as pd  # noqa: I202,E402
+import xarray as xr  # noqa: I202,E402
+
 mpl.use('Agg')
+
 from matplotlib import pyplot  # noqa: I202,E402
 
-import pandas as pd  # noqa: I202,E402
-
 from rasterstats import zonal_stats  # noqa: I202,E402
-
-import xarray as xr  # noqa: I202,E402
 
 
 if __name__ == '__main__':

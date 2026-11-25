@@ -1,17 +1,25 @@
-<tool id="climate_stripes" name="climate stripes" version="1.0.2">
+<tool id="climate_stripes" name="climate stripes" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="@PROFILE@">
     <description>from timeseries</description>
+    <macros>
+        <token name="@TOOL_VERSION@">1.0.2</token>
+        <token name="@VERSION_SUFFIX@">1</token>
+        <token name="@PROFILE@">25.1</token>
+    </macros>
     <edam_topics>
-      <edam_topic>topic_3855</edam_topic>
-      <edam_topic>topic_3318</edam_topic>
+        <edam_topic>topic_3855</edam_topic>
+        <edam_topic>topic_3318</edam_topic>
     </edam_topics>
     <edam_operations>
-      <edam_operation>operation_0337</edam_operation>
+        <edam_operation>operation_0337</edam_operation>
     </edam_operations>
     <requirements>
         <requirement type="package" version="3">python</requirement>
         <requirement type="package" version="3.5.2">matplotlib</requirement>
         <requirement type="package" version="1.4.3">pandas</requirement>
     </requirements>
+    <required_files>
+        <include path="climate_stripes.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
        python3 '$__tool_directory__/climate_stripes.py'
             '$ifilename' '$variable'
@@ -34,14 +42,14 @@
             --output image.png
     ]]></command>
     <inputs>
-        <param name="ifilename" type="data" format="tabular" label="timeseries to plot"></param>
-        <param name="variable" type="text" value="global" label="column name to use for plotting" />
-        <param name="title" type="text" value="" label="plot title" />
+        <param name="ifilename" type="data" format="tabular" label="timeseries to plot"/>
+        <param name="variable" type="text" value="global" label="column name to use for plotting"/>
+        <param name="title" type="text" value="" label="plot title"/>
         <section name="adv" title="Advanced Options" expanded="false">
-            <param name="nxsplit" type="integer" optional="true" label="number of values per intervals" />
-            <param name="xname" type="text" value="" label="column name to use for x-axis" />
-            <param name="format_date" type="text" value="" label="format for input date/time column" />
-            <param name="format_plot" type="text" value="" label="format for plotting dates on the x-axis" />
+            <param name="nxsplit" type="integer" optional="true" label="number of values per intervals"/>
+            <param name="xname" type="text" value="" label="column name to use for x-axis"/>
+            <param name="format_date" type="text" value="" label="format for input date/time column"/>
+            <param name="format_plot" type="text" value="" label="format for plotting dates on the x-axis"/>
             <param name="colormap" type="select">
                 <option value="Accent">Accent</option>
                 <option value="Blues">Blues</option>
@@ -129,19 +137,21 @@
     </outputs>
     <tests>
         <test>
-            <param name="ifilename" value="T2Mclimatology.txt" />
-            <param name="variable" value="global" />
+            <param name="ifilename" value="T2Mclimatology.txt"/>
+            <param name="variable" value="global"/>
             <output name="ofilename" ftype="png" file="T2Mstripes.png" compare="sim_size" delta="50"/>
         </test>
         <test>
-            <param name="ifilename" value="T2Mclimatology.txt" />
-            <param name="variable" value="global" />
-            <param name="title" value="Surface Temperature stripes (1979-2019)" />
-            <param name="colormap" value="OrRd" />
-            <param name="nxsplit" value="50" />
-            <param name="xname" value="Month" />
-            <param name="format_date" value="XYXm" />
-            <param name="format_plot" value="XY" />
+            <param name="ifilename" value="T2Mclimatology.txt"/>
+            <param name="variable" value="global"/>
+            <param name="title" value="Surface Temperature stripes (1979-2019)"/>
+            <section name="adv">
+                <param name="colormap" value="OrRd"/>
+                <param name="nxsplit" value="50"/>
+                <param name="xname" value="Month"/>
+                <param name="format_date" value="XYXm"/>
+                <param name="format_plot" value="XY"/>
+            </section>
             <output name="ofilename" ftype="png" file="T2Mstripes_with_axis.png" compare="sim_size" delta="50"/>
         </test>
     </tests>
@@ -170,5 +180,17 @@ By default, the colormap is ``RdBu_r`` and no axis nor title are plotted. These 
 changed in *Advanced settings*.
     ]]></help>
     <citations>
+        <citation type="bibtex">
+            @misc{climate_lab_book_2018_warming_stripes,
+              author = {Hawkins, Ed},
+              title = {Warming Stripes: Visualising climate change with colored stripes},
+              year = {2018},
+              url = {https://www.climate-lab-book.ac.uk/2018/warming-stripes/},
+              journal = {Climate Lab Book}
+            }
+        </citation>
     </citations>
+    <creator>
+        <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+    </creator>
 </tool>

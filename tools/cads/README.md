@@ -1,4 +1,9 @@
-
+---
+title: "Copernicus Atmosphere Data Store (ADS)"
+date: 2026-08-26
+draft: false
+weight: 1
+---
 # Copernicus Atmosphere Data Store (ADS)
 
 This tool allows you to retrieve [Copernicus Atmosphere Data Store (ADS)](https://ads.atmosphere.copernicus.eu/cdsapp#!/home).

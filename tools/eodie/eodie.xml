@@ -1,4 +1,4 @@
-<tool id="eodie" name="EODIE" version="@VERSION@" profile="20.09">
+<tool id="eodie" name="EODIE" version="@VERSION@+galaxy@VERSION_SUFFIX@" profile="@PROFILE@">
     <description>converts simple features data between file formats</description>
     <macros>
         <import>macros.xml</import>
@@ -17,6 +17,9 @@
         <requirement type="package" version="6.0">unzip</requirement>
         <requirement type="package" version="1.34">tar</requirement>
     </requirements>
+    <required_files>
+        <include path="postprocess_csv.sh"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
         mkdir -p work/data_collection work/results results_csv results_tiffs &&
         cp '$config_tif' config_tif.yml && 
@@ -97,19 +100,19 @@
                 <option value="tif">tiff file</option>
             </param>
             <when value="tif">
-                <param name='input_file' format="tiff" type="data" label="Individual input file"/>
+                <param name="input_file" format="tiff" type="data" label="Individual input file"/>
             </when>
             <when value="ls8">
-                <param name="input_file" type="data" format='zip,tar' label="Landsat 8 input data (zip or tarball)" />
+                <param name="input_file" type="data" format="zip,tar" label="Landsat 8 input data (zip or tarball)"/>
                 <param name="ls8_shp" type="data" format="shp" label="Landsat 8 tile shapefile" help="Provide the Landsat-8 tile shapefile"/>
             </when>
             <when value="s2">
-                <param name="input_file" type="data" format='zip,tar' label="Sentinel 2 input data (zip or tarball)" />
+                <param name="input_file" type="data" format="zip,tar" label="Sentinel 2 input data (zip or tarball)"/>
                 <param name="s2_shp" type="data" format="shp" label="Sentinel-2 tile shapefile" help="Provide the Sentinel-2 tile shapefile"/>
             </when>
         </conditional>
         <param type="data" name="input" format="shp" label="Shapefile with polygons" help="Provide shapefile with polygons"/>
-        <param name="identifier" type="text" value="PlotID" label="Name of identifier" />
+        <param name="identifier" type="text" value="PlotID" label="Name of identifier"/>
         <section name="adv_options" title="Advanced options" expanded="false">
             <param name="start_date" type="text" optional="true" label="Time frame start date (YYYYMMDD)">
                 <validator type="length" min="8" max="8" message="Please enter a date in the form of YYYYMMDD"/>
@@ -143,7 +146,7 @@
                     <when value="unique"/>
                     <when value="range"/>
                     <when value="percentile">
-                        <param name="p_value" type="integer" value="0" min="0" max="100" label="percentile value (if percentile selected)" />
+                        <param name="p_value" type="integer" value="0" min="0" max="100" label="percentile value (if percentile selected)"/>
                     </when>
                 </conditional>
             </repeat>
@@ -176,9 +179,9 @@
                 <option value="B11">B11</option>
                 <option value="B12">B12</option>
             </param>
-            <param name="exclude_splitshp" type="boolean" checked="false" label="exclude splitshp" help="Flag to indicate that splitshp has been run manually beforehand" truevalue="--exclude_splitshp" falsevalue="" />
-            <param name="exclude_border" type="boolean" checked="false" label="exclude border" help="Flag to indicate that border pixels (within the polygon) should be excluded from statistics calculations / array extraction" truevalue="--exclude_border" falsevalue="" />
-            <param name="geotiff_out" type="boolean" checked="false" label="generate geotiffs" help="flag to indicate that geotiffs shall be extracted" truevalue="--geotiff_out" falsevalue="" />
+            <param name="exclude_splitshp" type="boolean" checked="false" label="exclude splitshp" help="Flag to indicate that splitshp has been run manually beforehand" truevalue="--exclude_splitshp" falsevalue=""/>
+            <param name="exclude_border" type="boolean" checked="false" label="exclude border" help="Flag to indicate that border pixels (within the polygon) should be excluded from statistics calculations / array extraction" truevalue="--exclude_border" falsevalue=""/>
+            <param name="geotiff_out" type="boolean" checked="false" label="generate geotiffs" help="flag to indicate that geotiffs shall be extracted" truevalue="--geotiff_out" falsevalue=""/>
         </section>
     </inputs>
     <outputs>
@@ -190,8 +193,8 @@
     <tests>
         <test>
             <conditional name="input_type">
-                <param name="platform" value="tif" />
-                <param name="input_file" ftype="tiff" value="smaller_area_20100401.tif" />
+                <param name="platform" value="tif"/>
+                <param name="input_file" ftype="tiff" value="smaller_area_20100401.tif"/>
             </conditional>
             <param name="input" value="test_polygons/test_polygons.html" ftype="shp">
                 <composite_data value="test_polygons/test_polygons.shp"/>
@@ -218,24 +221,22 @@
             <output_collection name="csv_files" type="list" count="1">
                 <element name="testrgb_20100401__statistics.csv" ftype="tabular" file="testrgb_20100401__statistics.csv" compare="diff" lines_diff="1">
                     <assert_contents>
-                        <has_text text="percentile_10" />
-                        <has_text text="20508" />
-                        <has_text text="12049" />
-                        <has_text text="4508" />
-                        <has_text text="110." />
-                        <has_text text="147." />
-                        <has_text text="32." />
-                        <has_n_columns n="4" />
+                        <has_text text="percentile_10"/>
+                        <has_text text="20508"/>
+                        <has_text text="12049"/>
+                        <has_text text="4508"/>
+                        <has_text text="110."/>
+                        <has_text text="147."/>
+                        <has_text text="32."/>
+                        <has_n_columns n="4"/>
                     </assert_contents>
                 </element>
-
-
             </output_collection>
         </test>
         <test>
             <conditional name="input_type">
-                <param name="platform" value="ls8" />
-                <param name="input_file" ftype="tar" value="LS8.tar" />
+                <param name="platform" value="ls8"/>
+                <param name="input_file" ftype="tar" value="LS8.tar"/>
                 <param name="ls8_shp" ftype="shp" value="WRS2_descending/WRS2_descending.html">
                     <composite_data value="WRS2_descending/WRS2_descending.shp"/>
                     <composite_data value="WRS2_descending/WRS2_descending.shx"/>
@@ -272,28 +273,28 @@
             <output_collection name="csv_files" type="list" count="1">
                 <element name="ndvi_20190628_189017_statistics.csv" ftype="tabular" file="ndvi_20190628_189017_statistics.csv" compare="diff" lines_diff="1">
                     <assert_contents>
-                        <has_text text="count" />
-                        <has_text text="32" />
-                        <has_text text="81" />
-                        <has_text text="48" />
-                        <has_text text=".384" />
-                        <has_text text=".304" />
-                        <has_text text=".424" />
-                        <has_text text=".387" />
-                        <has_text text=".295" />
-                        <has_text text=".432" />
-                        <has_text text=".033" />
-                        <has_text text=".078" />
-                        <has_text text=".031" />
-                        <has_n_columns n="5" />
+                        <has_text text="count"/>
+                        <has_text text="32"/>
+                        <has_text text="81"/>
+                        <has_text text="48"/>
+                        <has_text text=".384"/>
+                        <has_text text=".304"/>
+                        <has_text text=".424"/>
+                        <has_text text=".387"/>
+                        <has_text text=".295"/>
+                        <has_text text=".432"/>
+                        <has_text text=".033"/>
+                        <has_text text=".078"/>
+                        <has_text text=".031"/>
+                        <has_n_columns n="5"/>
                     </assert_contents>
                 </element>
             </output_collection>
         </test>
         <test>
             <conditional name="input_type">
-                <param name="platform" value="s2" />
-                <param name="input_file" ftype="tar" value="S2.tar" />
+                <param name="platform" value="s2"/>
+                <param name="input_file" ftype="tar" value="S2.tar"/>
                 <param name="s2_shp" ftype="shp" value="sentinel2_tiles_world/sentinel2_tiles_world.html">
                     <composite_data value="sentinel2_tiles_world/sentinel2_tiles_world.shp"/>
                     <composite_data value="sentinel2_tiles_world/sentinel2_tiles_world.shx"/>
@@ -330,19 +331,19 @@
             <output_collection name="csv_files" type="list" count="1">
                 <element name="ndvi_20200626_34VFN_statistics.csv" ftype="tabular" file="ndvi_20200626_34VFN_statistics.csv" compare="diff" lines_diff="1">
                     <assert_contents>
-                        <has_text text="204" />
-                        <has_text text="551" />
-                        <has_text text="335" />
-                        <has_text text=".321" />
-                        <has_text text=".293" />
-                        <has_text text=".661" />
-                        <has_text text=".302" />
-                        <has_text text=".294" />
-                        <has_text text=".686" />
-                        <has_text text=".091" />
-                        <has_text text=".088" />
-                        <has_text text=".091" />
-                        <has_n_columns n="5" />
+                        <has_text text="204"/>
+                        <has_text text="551"/>
+                        <has_text text="335"/>
+                        <has_text text=".321"/>
+                        <has_text text=".293"/>
+                        <has_text text=".661"/>
+                        <has_text text=".302"/>
+                        <has_text text=".294"/>
+                        <has_text text=".686"/>
+                        <has_text text=".091"/>
+                        <has_text text=".088"/>
+                        <has_text text=".091"/>
+                        <has_n_columns n="5"/>
                     </assert_contents>
                 </element>
             </output_collection>
@@ -359,5 +360,6 @@ EODIE takes the objects in as polygons in a shapefile as well as the timeframe o
 The output is a per polygon timeseries of the selected features over the timeframe of interest.
 
     ]]>    </help>
-    <expand macro="citations" />
+    <expand macro="citations"/>
+    <expand macro="creator"/>
 </tool>

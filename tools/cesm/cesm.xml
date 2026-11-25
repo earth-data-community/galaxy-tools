@@ -1,4 +1,4 @@
-<tool id="cesm" name="CESM" profile="20.05" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@">
+<tool id="cesm" name="CESM" profile="25.1" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@">
     <description>Community Earth System Model</description>
     <macros>
         <import>macros.xml</import>
@@ -10,6 +10,16 @@
         <requirement type="package" version="2.35">binutils</requirement>
         <requirement type="package" version="3">python</requirement>
     </requirements>
+    <required_files>
+        <include path="config_compilers.xml"/>
+        <include path="config_machines.xml"/>
+        <include path="config_pes.xml"/>
+        <include path="config"/>
+        <include path="create_mapping.sh"/>
+        <include path="create_config_machines.sh"/>
+        <include path="save_logs.sh"/>
+        <include path="save_restart.sh"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
         export HOME=`pwd` &&
         export USER='FAKEUSER' &&
@@ -160,12 +170,12 @@
                 <option value="no" selected="true">List of netCDF input files</option>
             </param>
             <when value="yes">
-                <param name="inputdata" type="data" format='tar' label="inputdata for running CESM (tarball)" />
+                <param name="inputdata" type="data" format="tar" label="inputdata for running CESM (tarball)"/>
             </when>
             <when value="no">
                 <param name="input_data_collection" type="data" format="netcdf" multiple="true" label="Select input data" help="Select all the netCDF files you would need for running the chosen compset and resolution"/>
-                <param name="mapping" type="data" format='txt' label="Text file for mapping files in inputdata collection to physical files"/>
-            </when> 
+                <param name="mapping" type="data" format="txt" label="Text file for mapping files in inputdata collection to physical files"/>
+            </when>
         </conditional>
         <param name="casename" type="text" value="usecase" label="Name of your case">
             <validator type="regex" message="start with a letter and no blanks">^[A-Za-z][A-Za-z0-9]*</validator>
@@ -214,7 +224,7 @@
             </when>
             <when value="F1850">
                 <param name="resolution" type="select" label="Model resolution">
-                    <option value="f19_f19_mg17 --run-unsupported"></option>
+                    <option value="f19_f19_mg17 --run-unsupported"/>
                 </param>
             </when>
             <when value="B1850">
@@ -233,7 +243,7 @@
                     <option value="f19_g17">f19_g17</option>
                 </param>
             </when>
-	</conditional>
+        </conditional>
         <param name="save_workdir" type="boolean" value="false" label="Save workdir as a tarball when successful"/>
         <section name="adv_period" title="Customize the model run period" expanded="false">
             <conditional name="condi_type_run">
@@ -244,25 +254,25 @@
                 </param>
                 <when value="startup">
                     <param name="run_startdate" type="text" value="" label="Run start date (yyyy-mm-dd). Only used for startup or hybrid runs.">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
                 </when>
                 <when value="branch">
                     <param name="run_refcase" type="text" value="" label="Reference case for hybrid or branch runs"/>
                     <param name="run_refdate" type="text" value="" label="Reference date for hybrid or branch runs (yyyy-mm-dd)">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
-                    <param name="restart" type="data" format='tar' label="restart for running CESM"/>
+                    <param name="restart" type="data" format="tar" label="restart for running CESM"/>
                 </when>
                 <when value="hybrid">
                     <param name="run_refcase" type="text" value="" label="Reference case for hybrid or branch runs"/>
                     <param name="run_refdate" type="text" value="" label="Reference date for hybrid or branch runs (yyyy-mm-dd)">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
                     <param name="run_startdate" type="text" value="" label="Run start date (yyyy-mm-dd). Only used for startup or hybrid runs.">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
-                    <param name="restart" type="data" format='tar' label="restart for running CESM"/>
+                    <param name="restart" type="data" format="tar" label="restart for running CESM"/>
                 </when>
             </conditional>
             <param name="stopn" type="integer" value="5" label="Provides a numerical count for STOP_OPTION."/>
@@ -290,7 +300,7 @@
                 <option value="nseconds">nseconds</option>
                 <option value="nminutes">nminutes</option>
                 <option value="nhours">nhours</option>
-                <option value="nday">ndays</option>
+                <option value="nday">nday</option>
                 <option value="nmonths">nmonths</option>
                 <option value="nyears">nyears</option>
                 <option value="date">date</option>
@@ -309,7 +319,7 @@
                 <option value="nseconds">nseconds</option>
                 <option value="nminutes">nminutes</option>
                 <option value="nhours">nhours</option>
-                <option value="nday">ndays</option>
+                <option value="nday">nday</option>
                 <option value="nmonths">nmonths</option>
                 <option value="nyears">nyears</option>
                 <option value="date">date</option>
@@ -318,7 +328,6 @@
             </param>
             <param name="interim_files" type="boolean" value="false" label=""/>
         </section>
-        
         <section name="adv_lnd" title="Land namelist user customization" expanded="false">
             <param name="user_nl_lnd_customization" type="data" format="txt" optional="true" label="LAND User namelist (lnd_in)"/>
             <param name="inputs" type="data" format="netcdf" multiple="true" optional="true" label="Customized Input files for LAND component"/>
@@ -344,7 +353,7 @@
             <param name="inputs" type="data" format="netcdf" multiple="true" optional="true" label="Customized Input files for Ocean component"/>
         </section>
         <conditional name="condi_user_mods">
-            <param name="add_changes" type="select" label="user-modified source code"> 
+            <param name="add_changes" type="select" label="user-modified source code">
                 <option value="yes">Yes</option>
                 <option value="no" selected="true">No</option>
             </param>
@@ -371,132 +380,132 @@
         </collection>
     </outputs>
     <tests>
-        <test>
+        <test expect_num_outputs="5">
             <conditional name="input_type">
-                <param name="tarball" value="yes" />
-                <param name="inputdata" ftype="tar" value="inputdata_FKESSLER_ne30_g16_cesm2.1.3.tar" />
+                <param name="tarball" value="yes"/>
+                <param name="inputdata" ftype="tar" value="inputdata_FKESSLER_ne30_g16_cesm2.1.3.tar"/>
             </conditional>
-            <param name="casename" value="FKESSLER" />
+            <param name="casename" value="FKESSLER"/>
             <conditional name="condi_compset">
-                <param name="compset" value="FKESSLER" />
-                <param name="resolution" value="ne30_g16 --run-unsupported" />
+                <param name="compset" value="FKESSLER"/>
+                <param name="resolution" value="ne30_g16 --run-unsupported"/>
             </conditional>
             <param name="save_workdir" value="false"/>
             <section name="adv_period">
                 <conditional name="condi_type_run">
                     <param name="run_type" value="startup"/>
                 </conditional>
-                <param name="stop_option" value="nsteps" />
-                <param name="stopn" value="1" />
-                <param name="hist_option" value="never" />
+                <param name="stop_option" value="nsteps"/>
+                <param name="stopn" value="1"/>
+                <param name="hist_option" value="never"/>
             </section>
             <section name="adv_restart">
                 <param name="restart_option" value="never"/>
             </section>
             <output name="case_info" ftype="txt" file="case_info.txt" compare="sim_size" delta="1000">
-                    <assert_contents>
-                        <has_text text="MODEL EXECUTION HAS FINISHED" />
-                    </assert_contents>
+                <assert_contents>
+                    <has_text text="MODEL EXECUTION HAS FINISHED"/>
+                </assert_contents>
             </output>
             <output_collection name="logs_files" type="list">
                 <element name="atm_log.txt" ftype="txt" file="atm_log.txt" compare="sim_size" delta="1000">
                     <assert_contents>
-                        <has_text text="END OF MODEL RUN" />
+                        <has_text text="END OF MODEL RUN"/>
                     </assert_contents>
                 </element>
                 <element name="cesm_log.txt" ftype="txt" file="cesm_log.txt" compare="sim_size" delta="1000">
                 </element>
                 <element name="cpl_log.txt" ftype="txt" file="cpl_log.txt" compare="sim_size" delta="1000">
                     <assert_contents>
-                        <has_text text="SUCCESSFUL TERMINATION" />
+                        <has_text text="SUCCESSFUL TERMINATION"/>
                     </assert_contents>
                 </element>
             </output_collection>
         </test>
-        <test>
+        <test expect_num_outputs="5">
             <conditional name="input_type">
-                <param name="tarball" value="no" />
-                <param name="input_data_collection" ftype="netcdf" value="cam_vcoords_L30_c180105.nc" />
-                <param name="mapping" ftype='txt' value="inputdata_mapping.txt" />
+                <param name="tarball" value="no"/>
+                <param name="input_data_collection" ftype="netcdf" value="cam_vcoords_L30_c180105.nc"/>
+                <param name="mapping" ftype="txt" value="inputdata_mapping.txt"/>
             </conditional>
-            <param name="casename" value="FKESSLER" />
+            <param name="casename" value="FKESSLER"/>
             <conditional name="condi_compset">
-                <param name="compset" value="FKESSLER" />
-                <param name="resolution" value="ne30_g16 --run-unsupported" />
+                <param name="compset" value="FKESSLER"/>
+                <param name="resolution" value="ne30_g16 --run-unsupported"/>
             </conditional>
             <param name="save_workdir" value="false"/>
             <section name="adv_period">
                 <conditional name="condi_type_run">
                     <param name="run_type" value="startup"/>
                 </conditional>
-                <param name="stop_option" value="nsteps" />
-                <param name="stopn" value="1" />
-                <param name="hist_option" value="never" />
+                <param name="stop_option" value="nsteps"/>
+                <param name="stopn" value="1"/>
+                <param name="hist_option" value="never"/>
             </section>
             <section name="adv_restart">
                 <param name="restart_option" value="never"/>
             </section>
             <output name="case_info" ftype="txt" file="case_info.txt" compare="sim_size" delta="1000">
-                    <assert_contents>
-                        <has_text text="MODEL EXECUTION HAS FINISHED" />
-                    </assert_contents>
+                <assert_contents>
+                    <has_text text="MODEL EXECUTION HAS FINISHED"/>
+                </assert_contents>
             </output>
             <output_collection name="logs_files" type="list">
                 <element name="atm_log.txt" ftype="txt" file="atm_log.txt" compare="sim_size" delta="1000">
                     <assert_contents>
-                        <has_text text="END OF MODEL RUN" />
+                        <has_text text="END OF MODEL RUN"/>
                     </assert_contents>
                 </element>
                 <element name="cesm_log.txt" ftype="txt" file="cesm_log.txt" compare="sim_size" delta="1000">
                 </element>
                 <element name="cpl_log.txt" ftype="txt" file="cpl_log.txt" compare="sim_size" delta="1000">
                     <assert_contents>
-                        <has_text text="SUCCESSFUL TERMINATION" />
+                        <has_text text="SUCCESSFUL TERMINATION"/>
                     </assert_contents>
                 </element>
             </output_collection>
         </test>
-        <test>
+        <test expect_num_outputs="5">
             <conditional name="input_type">
-                <param name="tarball" value="yes" />
-                <param name="inputdata" ftype="tar" value="inputdata_FKESSLER_ne30_g16_cesm2.1.3.tar" />
+                <param name="tarball" value="yes"/>
+                <param name="inputdata" ftype="tar" value="inputdata_FKESSLER_ne30_g16_cesm2.1.3.tar"/>
             </conditional>
-            <param name="casename" value="FKESSLER" />
+            <param name="casename" value="FKESSLER"/>
             <conditional name="condi_compset">
-                <param name="compset" value="FKESSLER" />
-                <param name="resolution" value="ne30_g16 --run-unsupported" />
+                <param name="compset" value="FKESSLER"/>
+                <param name="resolution" value="ne30_g16 --run-unsupported"/>
             </conditional>
             <param name="save_workdir" value="false"/>
             <section name="adv_period">
                 <conditional name="condi_type_run">
                     <param name="run_type" value="startup"/>
                 </conditional>
-                <param name="stop_option" value="nsteps" />
-                <param name="stopn" value="1" />
-                <param name="hist_option" value="never" />
+                <param name="stop_option" value="nsteps"/>
+                <param name="stopn" value="1"/>
+                <param name="hist_option" value="never"/>
             </section>
             <section name="adv_restart">
                 <param name="restart_option" value="never"/>
             </section>
             <section name="adv_atm">
-                <param name="user_nl_atm_customization" ftype="txt" value="user_nl_cam" />
+                <param name="user_nl_atm_customization" ftype="txt" value="user_nl_cam"/>
             </section>
             <output name="case_info" ftype="txt" file="case_info.txt" compare="sim_size" delta="1000">
-                    <assert_contents>
-                        <has_text text="MODEL EXECUTION HAS FINISHED" />
-                    </assert_contents>
+                <assert_contents>
+                    <has_text text="MODEL EXECUTION HAS FINISHED"/>
+                </assert_contents>
             </output>
             <output_collection name="logs_files" type="list">
                 <element name="atm_log.txt" ftype="txt" file="atm_log.txt" compare="sim_size" delta="1000">
                     <assert_contents>
-                        <has_text text="END OF MODEL RUN" />
+                        <has_text text="END OF MODEL RUN"/>
                     </assert_contents>
                 </element>
                 <element name="cesm_log.txt" ftype="txt" file="cesm_log.txt" compare="sim_size" delta="1000">
                 </element>
                 <element name="cpl_log.txt" ftype="txt" file="cpl_log.txt" compare="sim_size" delta="1000">
                     <assert_contents>
-                        <has_text text="SUCCESSFUL TERMINATION" />
+                        <has_text text="SUCCESSFUL TERMINATION"/>
                     </assert_contents>
                 </element>
             </output_collection>
@@ -517,4 +526,5 @@ Available component configurations and grids:
 	    - `Component Configuration Settings <https://www.cesm.ucar.edu/models/cesm2/settings/2.1.3/>`_
     ]]></help>
     <expand macro="citations"/>
+    <expand macro="creator"/>
 </tool>

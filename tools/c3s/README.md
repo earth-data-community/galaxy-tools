@@ -1,4 +1,9 @@
-
+---
+title: "Copernicus Climate Data Store (C3S)"
+date: 2026-08-26
+draft: false
+weight: 1
+---
 # Copernicus Climate Data Store (C3S)
 
 This tool allows you to retrieve [Copernicus Climate Data Store (C3S)](https://cds.climate.copernicus.eu/#!/home).

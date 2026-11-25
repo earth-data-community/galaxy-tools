@@ -1,3 +1,9 @@
+---
+title: "Data from smithsonian volcanoes database"
+date: 2026-08-26
+draft: false
+weight: 1
+---
 
 # Retrieve data from smithsonian volcanoes database
 

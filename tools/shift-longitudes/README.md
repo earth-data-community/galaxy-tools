@@ -1,5 +1,11 @@
+---
+title: "Shift longitudes from netCDF file"
+date: 2026-08-26
+draft: false
+weight: 1
+---
 
-# shift longitudes from netCDF file
+# Shift longitudes from netCDF file
 
 The wrapper aims at providing a simple utility to shift longitudes ranging from
 0. and 360 degrees to -180. and 180. degrees.

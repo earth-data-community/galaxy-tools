@@ -1,4 +1,4 @@
-<tool id="cdo_operations" name="CDO Operations" profile="20.05" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@">
+<tool id="cdo_operations" name="CDO Operations" profile="@PROFILE@" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@">
     <description>Climate Data Manipulation Operators operations for standard processing of climate and NWP model output.</description>
     <macros>
         <import>macros.xml</import>
@@ -101,94 +101,114 @@
     </outputs>
     <tests>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="select" />
-                <param name="params" value="name=Drops" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="select"/>
+                    <param name="params" value="name=Drops"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="drops1.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="copy" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="copy"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="WMI_Lear_copy.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="cat" />
-                <param name="add_file" value="drops1.nc,drops2.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="cat"/>
+                    <param name="add_file" value="drops1.nc,drops2.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="drops_cat.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="splitname" />
-                <param name="add_file" value="lat_long.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="splitname"/>
+                    <param name="add_file" value="lat_long.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="2"/>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="replace" />
-                <param name="add_file" value="lat_long.nc,latitude_modified.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="replace"/>
+                    <param name="add_file" value="lat_long.nc,latitude_modified.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="lat_long_modified.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="duplicate" />
-                <param name="ndup" value="3" ftype="integer" />
-                <param name="add_file" value="latitude.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="duplicate"/>
+                    <param name="ndup" value="3"/>
+                    <param name="add_file" value="latitude.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="latitude3.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="selname" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-                <param name="params" value="Drops" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="selname"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                    <param name="params" value="Drops"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="drops1.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="seltimestep" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-                <param name="params" value="1,13,25" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="seltimestep"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                    <param name="params" value="1,13,25"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="WMI_Lear_timesteps.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="sellonlatbox" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-                <param name="params" value="-10,10,60,70" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="sellonlatbox"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                    <param name="params" value="-10,10,60,70"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="WMI_Lear_sellonlatbox.nc" compare="sim_size" delta="50"/>
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="invertlat" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="invertlat"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="WMI_Lear_invertlat.nc" compare="sim_size" delta="50"/>
             </output_collection>
@@ -196,15 +216,15 @@
         <test>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="selname" />
-                    <param name="params" value="Drops" />
+                    <param name="opt" value="selname"/>
+                    <param name="params" value="Drops"/>
                 </conditional>
             </repeat>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="addc" />
-                    <param name="const_value" value="10.5" />
-                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
+                    <param name="opt" value="addc"/>
+                    <param name="const_value" value="10.5"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
                 </conditional>
             </repeat>
             <output_collection name="output_files" type="list" count="1">
@@ -212,11 +232,13 @@
             </output_collection>
         </test>
         <test>
-            <conditional name="operator">
-                <param name="opt" value="expr" />
-                <param name="params" value="Drops2=1000*exp(1+Drops)" />
-                <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
-            </conditional>
+            <repeat name="section_operators">
+                <conditional name="operator">
+                    <param name="opt" value="expr"/>
+                    <param name="params" value="Drops2=1000*exp(1+Drops)"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
+                </conditional>
+            </repeat>
             <output_collection name="output_files" type="list" count="1">
                 <element name="outfile.netcdf" ftype="netcdf" file="WMI_Lear_expr.nc" compare="sim_size" delta="50"/>
             </output_collection>
@@ -224,15 +246,15 @@
         <test>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="selname" />
-                    <param name="params" value="CLEAR_SKY_BHI" />
+                    <param name="opt" value="selname"/>
+                    <param name="params" value="CLEAR_SKY_BHI"/>
                 </conditional>
             </repeat>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="tim" />
-                    <param name="stat" value="avg" />
-                    <param name="add_file" value="timeseries.nc" ftype="netcdf" />
+                    <param name="opt" value="tim"/>
+                    <param name="stat" value="avg"/>
+                    <param name="add_file" value="timeseries.nc" ftype="netcdf"/>
                 </conditional>
             </repeat>
             <output_collection name="output_files" type="list" count="1">
@@ -242,15 +264,15 @@
         <test>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="sub" />
-                    <param name="add_file" value="timeseries.nc" ftype="netcdf" />
+                    <param name="opt" value="sub"/>
+                    <param name="add_file" value="timeseries.nc" ftype="netcdf"/>
                 </conditional>
             </repeat>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="addc" />
-                    <param name="const_value" value="10.5" />
-                    <param name="add_file" value="timeseries.nc" ftype="netcdf" />
+                    <param name="opt" value="addc"/>
+                    <param name="const_value" value="10.5"/>
+                    <param name="add_file" value="timeseries.nc" ftype="netcdf"/>
                 </conditional>
             </repeat>
             <output_collection name="output_files" type="list" count="1">
@@ -260,15 +282,15 @@
         <test>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="sellonlatbox" />
-                    <param name="params" value="-10,10,60,70" />
+                    <param name="opt" value="sellonlatbox"/>
+                    <param name="params" value="-10,10,60,70"/>
                 </conditional>
             </repeat>
             <repeat name="section_operators">
                 <conditional name="operator">
-                    <param name="opt" value="setattribute" />
-                    <param name="attr_file" value="attributes.txt" />
-                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf" />
+                    <param name="opt" value="setattribute"/>
+                    <param name="attr_file" value="attributes.txt"/>
+                    <param name="add_file" value="WMI_Lear.nc" ftype="netcdf"/>
                 </conditional>
             </repeat>
             <output_collection name="output_files" type="list" count="1">
@@ -290,4 +312,5 @@ This tool is a wrapper to the Climate Data Operators (CDO) for all operators man
 
     ]]>    </help>
     <expand macro="citations"/>
+    <expand macro="creator"/>
 </tool>

@@ -1,9 +1,16 @@
-<tool id="smithsonian_volcanoes" name="smithsonian volcanoes" version="0.1.0">
+<tool id="smithsonian_volcanoes" name="smithsonian volcanoes" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>Retrieve Volcanoes of the World (VOTW)</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.1.0</token>
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
     <requirements>
         <requirement type="package" version="3">python</requirement>
         <requirement type="package" version="0.17.1">owslib</requirement>
     </requirements>
+    <required_files>
+        <include path="wfs_download.py"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
        python3 '$__tool_directory__/wfs_download.py'
                'https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wfs' 
@@ -43,29 +50,79 @@
                 <option value="geojson">geojson</option>
             </param>
             <when value="csv">
-                <param name="max_features" type="integer" optional="true" label="Maximum number of features" help="Do not set if you wish to retrieve the entire dataset" />
+                <param name="max_features" type="integer" optional="true" label="Maximum number of features" help="Do not set if you wish to retrieve the entire dataset"/>
             </when>
             <when value="geojson"/>
         </conditional>
     </inputs>
     <outputs>
-           <data name="ofilename" format="geojson">
-                <change_format>
-                    <when input="format" value="csv" format="csv" />
-                </change_format>
-           </data>
+        <data name="ofilename" format="csv">
+            <change_format>
+                <when input="format_type.format" value="geojson" format="geojson"/>
+            </change_format>
+        </data>
     </outputs>
     <tests>
-        <test>
-           <param name="typename" value="GVP-VOTW:Smithsonian_VOTW_Pleistocene_Volcanoes" />
-           <param name="format" value="geojson" />
-           <output name="ofilename" ftype="geojson" file="E3WebApp_Pleistocene_volcanoes.geojson"/>
+        <!-- Test 1: Pleistocene Volcanoes (GeoJSON) -->
+        <test expect_num_outputs="1">
+            <param name="typename" value="GVP-VOTW:Smithsonian_VOTW_Pleistocene_Volcanoes"/>
+            <conditional name="format_type">
+                <param name="format" value="geojson"/>
+            </conditional>
+            <output name="ofilename" ftype="geojson">
+                <assert_contents>
+                    <!-- Check GeoJSON structure -->
+                    <has_text text="{&quot;type&quot;:&quot;FeatureCollection&quot;"/>
+                    <has_text text="&quot;totalFeatures&quot;:"/>
+                    <has_text text="&quot;type&quot;:&quot;Feature&quot;"/>
+                    <has_text text="&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;"/>
+                    <!-- Check required properties exist in at least one feature -->
+                    <has_text text="&quot;Volcano_Name&quot;:"/>
+                    <has_text text="&quot;Latitude&quot;:"/>
+                    <has_text text="&quot;Longitude&quot;:"/>
+                    <has_text text="&quot;Country&quot;:"/>
+                </assert_contents>
+            </output>
         </test>
-        <test>
-           <param name="typename" value="GVP-VOTW:E3WebApp_Eruptions1960" />
-           <param name="format" value="csv" />
-           <param name="csv.max_features" value="50" />
-           <output name="ofilename" ftype="csv" file="E3WebApp_Eruptions1960.csv"/>
+        <!-- Test 2: Eruptions since 1960 (CSV) -->
+        <test expect_num_outputs="1">
+            <param name="typename" value="GVP-VOTW:E3WebApp_Eruptions1960"/>
+            <conditional name="format_type">
+                <param name="format" value="csv"/>
+                <param name="max_features" value="50"/>
+            </conditional>
+            <output name="ofilename" ftype="csv">
+                <assert_contents>
+                    <!-- Check CSV header -->
+                    <has_text text="FID,VolcanoNumber,VolcanoName,ExplosivityIndexMax,StartDate"/>
+                    <!-- Check at least 40 lines (header + 39 data rows) -->
+                    <has_n_lines n="40" delta="10"/>
+                    <!-- Check required columns exist -->
+                    <has_text text="VolcanoName"/>
+                    <has_text text="StartDate"/>
+                    <has_text text="LatitudeDecimal"/>
+                    <!-- Check for known data (Dallol) -->
+                    <has_text text="221041,Dallol"/>
+                    <has_text text="14.242,40.3"/>
+                </assert_contents>
+            </output>
+        </test>
+        <!-- Test 3: Holocene Volcanoes (CSV, full dataset) -->
+        <test expect_num_outputs="1">
+            <param name="typename" value="GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes"/>
+            <conditional name="format_type">
+                <param name="format" value="csv"/>
+            </conditional>
+            <output name="ofilename" ftype="csv">
+                <assert_contents>
+                    <!-- Check CSV header -->
+                    <has_text text="FID,Volcano_Number,Volcano_Name,Volcanic_Landform,Primary_Volcano_Type,Last_Eruption_Year,Country"/>
+                    <!-- Check large dataset (adjust delta based on expected size) -->
+                    <has_n_lines n="1227" delta="200"/>
+                    <!-- Check for known volcano (e.g., Etna) -->
+                    <has_text text="Etna"/>
+                </assert_contents>
+            </output>
         </test>
     </tests>
     <help><![CDATA[
@@ -120,5 +177,17 @@ owslib can be found at https://geopython.github.io/OWSLib/
 
     ]]></help>
     <citations>
+        <citation type="bibtex">
+            @misc{owslib,
+              author       = {Tom Kralidis and others},
+              title        = {OWSLib: Python library for accessing geospatial data from OGC web services},
+              year         = {2023},
+              howpublished = {\url{https://geopython.github.io/OWSLib/}},
+              note         = {Python library for interacting with OGC web services such as WMS, WFS, WCS, and CSW.}
+            }
+        </citation>
     </citations>
+    <creator>
+        <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+    </creator>
 </tool>

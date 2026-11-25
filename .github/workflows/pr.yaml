@@ -61,7 +61,7 @@ jobs:
     - name: Determine latest commit in the Galaxy repo
       id: get-galaxy-sha
       run: echo "galaxy-head-sha=$(git ls-remote https://github.com/${{ env.GALAXY_FORK }}/galaxy refs/heads/${{ env.GALAXY_BRANCH }} | cut -f1)" >> $GITHUB_OUTPUT
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -82,7 +82,7 @@ jobs:
       run: pip install wheel
     - name: Install flake8
       run: pip install flake8 flake8-import-order
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -116,10 +116,10 @@ jobs:
       matrix:
         python-version: ['3.11']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -130,7 +130,7 @@ jobs:
         key: pip_cache_py_${{ matrix.python-version }}_gxy_${{ needs.setup.outputs.galaxy-head-sha }}
     - name: Find Pull Request
       id: find-pr
-      uses: sharesight/find-github-pull-request@v1.3.0
+      uses: sharesight/find-github-pull-request@v1.4.0
       with:
         allowClosed: true
         failIfNotFound: true
@@ -186,10 +186,10 @@ jobs:
       matrix:
         python-version: ['3.11']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -218,7 +218,7 @@ jobs:
         os: [ubuntu-24.04]
         r-version: ['release']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
     - uses: r-lib/actions/setup-r@v2
@@ -253,7 +253,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && needs.setup.outputs.repository-list != '' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -297,10 +297,10 @@ jobs:
         ports:
           - 5432:5432
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -320,12 +320,6 @@ jobs:
       id: cpu-cores
     - name: Clean dotnet folder for space
       run: rm -Rf /usr/share/dotnet
-    - name: Create Copernicus Climate Change Config file
-      uses: jwsi/secret-parser@v1
-      with:
-        filename: tools/essential_climate_variables/cdsapirc.cfg
-        secret-name: GALAXY_COPERNICUS_CDSAPIRC_KEY
-        secret-value: ${{ secrets.GALAXY_COPERNICUS_CDSAPIRC_KEY }}
     - name: Create Copernicus Atmosphere Monitoring Config file
       uses: jwsi/secret-parser@v1
       with:
@@ -375,7 +369,7 @@ jobs:
     - uses: actions/download-artifact@v8
       with:
         path: artifacts
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -413,16 +407,16 @@ jobs:
   deploy:
     name: Deploy
     needs: [setup, lint, combine_outputs]
-    if: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'NordicESMHub' }}
+    if: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'earth-data-community' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.11']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip

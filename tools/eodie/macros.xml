@@ -1,5 +1,7 @@
 <macros>
     <token name="@VERSION@">1.0.2</token>
+    <token name="@VERSION_SUFFIX@">1</token>
+    <token name="@PROFILE@">25.1</token>
     <xml name="edam_ontology">
         <edam_topics>
             <edam_topic>topic_0610</edam_topic>
@@ -219,5 +221,10 @@ lookup: './postprocesses/lookuptable.txt'
         <citations>
             <citation type="doi">10.5281/zenodo.4762323</citation>
         </citations>
+    </xml>
+    <xml name="creator">
+        <creator>
+            <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+        </creator>
     </xml>
 </macros>

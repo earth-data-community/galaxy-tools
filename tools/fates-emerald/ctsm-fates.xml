@@ -1,5 +1,19 @@
-<tool id="ctsm_fates" name="CTSM/FATES-EMERALD" version="2.0.1.1">
+<tool id="ctsm_fates" name="CTSM/FATES-EMERALD" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="25.1">
     <description>Functionally Assembled Terrestrial Ecosystem Simulator</description>
+    <macros>
+        <token name="@TOOL_VERSION@">2.0.1.1</token>
+        <token name="@VERSION_SUFFIX@">1</token>
+    </macros>
+    <edam_topics>
+        <edam_topic>topic_3855</edam_topic>
+        <edam_topic>topic_3318</edam_topic>
+        <edam_topic>topic_3050</edam_topic>
+        <edam_topic>topic_0610</edam_topic>
+    </edam_topics>
+    <edam_operations>
+        <edam_operation>operation_3946</edam_operation>
+        <edam_operation>operation_2426</edam_operation>
+    </edam_operations>
     <requirements>
         <requirement type="package" version="2.0.1">fates-emerald</requirement>
         <requirement type="package" version="1.32">tar</requirement>
@@ -7,6 +21,11 @@
         <requirement type="package" version="3">python</requirement>
         <requirement type="package" version="2.0132">perl-xml-libxml</requirement>
     </requirements>
+    <required_files>
+        <include path="config"/>
+        <include path="config_compilers.xml"/>
+        <include path="config_machines.xml"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
           ( export HOME=`pwd` &&
           export USER='jovyan' &&
@@ -87,33 +106,32 @@
         </configfile>
     </configfiles>
     <inputs>
-        <param name="inputdata" type="data" format='tar' label="inputdata for running FATES EMERALD"></param>
+        <param name="inputdata" type="data" format="tar" label="inputdata for running FATES EMERALD"/>
         <param name="casename" type="text" value="usecase" label="Name of your case">
             <validator type="regex" message="start with a letter and no blanks">^[A-Za-z][A-Za-z0-9]*</validator>
         </param>
         <param name="resolution" type="select" label="Model resolution">
-                <option value="1x1_ALP1">ALP1</option>
-                <option value="1x1_ALP2">ALP2</option>
-                <option value="1x1_ALP3">ALP3</option>
-                <option value="1x1_ALP4">ALP4</option>
-                <option value="1x1_SUB1">SUB1</option>
-                <option value="1x1_SUB2">SUB2</option>
-                <option value="1x1_SUB3">SUB3</option>
-                <option value="1x1_SUB4">SUB4</option>
-                <option value="1x1_BOR1">BOR1</option>
-                <option value="1x1_BOR2">BOR2</option>
-                <option value="1x1_BOR3">BOR3</option>
-                <option value="1x1_BOR4">BOR4</option>
-                <option value="1x1_LYG">LYG</option>
-                <option value="1x1_BUO">BUO</option>
-                <option value="1x1_HAV">HAV</option>
-                <option value="1x1_SKO">SKO</option>
-                <option value="1x1_VIKE">VIKE</option>
-                <option value="1x1_LIAH">LIAH</option>
-                <option value="1x1_FINN">FINN</option>
+            <option value="1x1_ALP1">ALP1</option>
+            <option value="1x1_ALP2">ALP2</option>
+            <option value="1x1_ALP3">ALP3</option>
+            <option value="1x1_ALP4">ALP4</option>
+            <option value="1x1_SUB1">SUB1</option>
+            <option value="1x1_SUB2">SUB2</option>
+            <option value="1x1_SUB3">SUB3</option>
+            <option value="1x1_SUB4">SUB4</option>
+            <option value="1x1_BOR1">BOR1</option>
+            <option value="1x1_BOR2">BOR2</option>
+            <option value="1x1_BOR3">BOR3</option>
+            <option value="1x1_BOR4">BOR4</option>
+            <option value="1x1_LYG">LYG</option>
+            <option value="1x1_BUO">BUO</option>
+            <option value="1x1_HAV">HAV</option>
+            <option value="1x1_SKO">SKO</option>
+            <option value="1x1_VIKE">VIKE</option>
+            <option value="1x1_LIAH">LIAH</option>
+            <option value="1x1_FINN">FINN</option>
         </param>
         <section name="adv_period" title="Customize the model run period" expanded="false">
-
             <conditional name="condi_type_run">
                 <param name="run_type" type="select" label="Determines the model run initialization type.">
                     <option value="startup" selected="true">startup</option>
@@ -122,28 +140,28 @@
                 </param>
                 <when value="startup">
                     <param name="run_startdate" type="text" value="" label="Run start date (yyyy-mm-dd). Only used for startup or hybrid runs.">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
                 </when>
                 <when value="branch">
-                    <param name="run_refcase" type="text" value="" label="Reference case for hybrid or branch runs"></param>
+                    <param name="run_refcase" type="text" value="" label="Reference case for hybrid or branch runs"/>
                     <param name="run_refdate" type="text" value="" label="Reference date for hybrid or branch runs (yyyy-mm-dd)">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
-                    <param name="restart" type="data" format='tar' label="restart for running FATES EMERALD"></param>
+                    <param name="restart" type="data" format="tar" label="restart for running FATES EMERALD"/>
                 </when>
                 <when value="hybrid">
-                    <param name="run_refcase" type="text" value="" label="Reference case for hybrid or branch runs"></param>
+                    <param name="run_refcase" type="text" value="" label="Reference case for hybrid or branch runs"/>
                     <param name="run_refdate" type="text" value="" label="Reference date for hybrid or branch runs (yyyy-mm-dd)">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
                     <param name="run_startdate" type="text" value="" label="Run start date (yyyy-mm-dd). Only used for startup or hybrid runs.">
-                       <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
+                        <validator type="regex" message="YYYY-MM-DD">(^$|(\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])))</validator>
                     </param>
-                    <param name="restart" type="data" format='tar' label="restart for running FATES EMERALD"></param>
+                    <param name="restart" type="data" format="tar" label="restart for running FATES EMERALD"/>
                 </when>
             </conditional>
-            <param name="stopn" type="integer" value="5" label="Provides a numerical count for STOP_OPTION."></param>
+            <param name="stopn" type="integer" value="5" label="Provides a numerical count for STOP_OPTION."/>
             <param name="stop_option" type="select" label=" Sets the run length along with STOP_N and STOP_DATE">
                 <option value="ndays" selected="true">ndays</option>
                 <option value="none">none</option>
@@ -161,37 +179,37 @@
             </param>
         </section>
         <section name="adv_clm" title="CLM namelist customization" expanded="false">
-            <param name="use_fates_planthydro" type="boolean" label="Toggle to turn on plant hydraulics" truevalue=".true." falsevalue=".false."  checked="false"/>
-            <param name="use_fates_cohort_age_tracking" type="boolean" label="Toggle to turn on cohort age tracking" truevalue=".true." falsevalue=".false."  checked="false"/>
-            <param name="use_fates_ed_st3" type="boolean" label="Toggle to turn on Static Stand Structure Mode" truevalue=".true." falsevalue=".false."  checked="false"/>
-            <param name="use_fates_ed_prescribed_phys" type="boolean" label="Toggle to turn on prescribed physiology" truevalue=".true." falsevalue=".false."  checked="false"/>
-            <param name="use_fates_logging" type="boolean" label="Toggle to turn on the logging module" truevalue=".true." falsevalue=".false."  checked="false"/>
-            <param name="use_fates_fixed_biogeog" type="boolean" label="Toggle to turn on fixed biogeography mode" truevalue=".true." falsevalue=".false."  checked="false"/>
+            <param name="use_fates_planthydro" type="boolean" label="Toggle to turn on plant hydraulics" truevalue=".true." falsevalue=".false." checked="false"/>
+            <param name="use_fates_cohort_age_tracking" type="boolean" label="Toggle to turn on cohort age tracking" truevalue=".true." falsevalue=".false." checked="false"/>
+            <param name="use_fates_ed_st3" type="boolean" label="Toggle to turn on Static Stand Structure Mode" truevalue=".true." falsevalue=".false." checked="false"/>
+            <param name="use_fates_ed_prescribed_phys" type="boolean" label="Toggle to turn on prescribed physiology" truevalue=".true." falsevalue=".false." checked="false"/>
+            <param name="use_fates_logging" type="boolean" label="Toggle to turn on the logging module" truevalue=".true." falsevalue=".false." checked="false"/>
+            <param name="use_fates_fixed_biogeog" type="boolean" label="Toggle to turn on fixed biogeography mode" truevalue=".true." falsevalue=".false." checked="false"/>
             <param name="fates_spitfire_mode" type="select" label="Spitfire module to simulate fire">
                 <option value="0" selected="true">None</option>
                 <option value="1">Use a global constant lightning rate found in fates_params</option>
                 <option value="2">Use an external lightning dataset</option>
                 <option value="3">Use an external confirmed ignitions dataset</option>
                 <option value="4">Use external lightning and population datasets to simulate both natural and anthropogenic ignitions</option>
-           </param>
-           <param name="fates_parteh_mode" type="select" label="Switch deciding which nutrient model to use in FATES">
-               <option value="" selected="true">None</option>
-               <option value="1">1</option>
-               <option value="2">2</option>
-           </param>
+            </param>
+            <param name="fates_parteh_mode" type="select" label="Switch deciding which nutrient model to use in FATES">
+                <option value="" selected="true">None</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+            </param>
         </section>
         <section name="adv" title="Advanced customization" expanded="false">
-            <param name="co2" type="float" value="367.0" label="Atmospheric CO2 molar ratio (by volume) only used when co2_type==constant (umol/mol)"></param>
+            <param name="co2" type="float" value="367.0" label="Atmospheric CO2 molar ratio (by volume) only used when co2_type==constant (umol/mol)"/>
             <conditional name="condi_user_mods">
                 <param name="add_changes" type="select" label="user-modified source code">
                     <option value="no" selected="true">no</option>
                     <option value="yes">yes</option>
                 </param>
                 <when value="yes">
-                    <param name="usermods" type="data" format="tar" label="SourceMods"></param>
-               </when>
-               <when value="no"/>
-        </conditional>
+                    <param name="usermods" type="data" format="tar" label="SourceMods"/>
+                </when>
+                <when value="no"/>
+            </conditional>
         </section>
     </inputs>
     <outputs>
@@ -203,106 +221,110 @@
         <data name="cpl_log" format="txt" label="${tool.name} on ${inputdata.name} (cpl.log)"/>
         <data name="lnd_log" format="txt" label="${tool.name} on ${inputdata.name} (lnd.log)"/>
         <data name="rof_log" format="txt" label="${tool.name} on ${inputdata.name} (rof.log)"/>
-        <data name="restart" format="tar" label="${tool.name} on ${inputdata.name} (restart)"></data>
-        <data name="case_info" format="txt" label="${tool.name} on ${inputdata.name} (case info)"></data>
-        <data name="rinfo" format="txt" label="${tool.name} on ${inputdata.name} (restart info)"></data>
+        <data name="restart" format="tar" label="${tool.name} on ${inputdata.name} (restart)"/>
+        <data name="case_info" format="txt" label="${tool.name} on ${inputdata.name} (case info)"/>
+        <data name="rinfo" format="txt" label="${tool.name} on ${inputdata.name} (restart info)"/>
         <data name="work" format="tar" label="${tool.name} on ${inputdata.name} (workdir)">
         </data>
     </outputs>
     <tests>
         <test>
-            <param name="inputdata" value="inputdata_test.tar" />
-            <param name="casename" value="test" />
-            <param name="resolution" value="1x1_ALP1" />
-            <param name="run_startdate" value="2000-01-01" />
-            <param name="stop_option" value="nsteps" />
-            <param name="stopn" value="1" />
+            <param name="inputdata" value="inputdata_test.tar"/>
+            <param name="casename" value="test"/>
+            <param name="resolution" value="1x1_ALP1"/>
+            <section name="adv_period">
+                <conditional name="condi_type_run">
+                    <param name="run_startdate" value="2000-01-01"/>
+                </conditional>
+                <param name="stop_option" value="nsteps"/>
+                <param name="stopn" value="1"/>
+            </section>
             <output name="atm_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="(datm_comp_final) atm: end of main integration loop" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="(datm_comp_final) atm: end of main integration loop"/>
+                </assert_contents>
             </output>
             <output name="cesm_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="pes participating in computation for CLM" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="pes participating in computation for CLM"/>
+                </assert_contents>
             </output>
             <output name="cpl_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="SUCCESSFUL TERMINATION" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="SUCCESSFUL TERMINATION"/>
+                </assert_contents>
             </output>
             <output name="lnd_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="Successfully" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="Successfully"/>
+                </assert_contents>
             </output>
             <output name="rof_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="MOSART model initialization" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="MOSART model initialization"/>
+                </assert_contents>
             </output>
-            <output name="restart" ftype="tar" file="restart.tar" compare="sim_size" delta="100" />
+            <output name="restart" ftype="tar" file="restart.tar" compare="sim_size" delta="100"/>
             <output name="rinfo" ftype="txt">
-              <assert_contents>
-                  <has_text text="datm.r.2000-01-01-01800.nc" />
-                  <has_text text="datm.rs1.2000-01-01-01800.bin" />
-                  <has_text text="cpl.r.2000-01-01-01800.nc" />
-                  <has_text text="clm2.r.2000-01-01-01800.nc" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="datm.r.2000-01-01-01800.nc"/>
+                    <has_text text="datm.rs1.2000-01-01-01800.bin"/>
+                    <has_text text="cpl.r.2000-01-01-01800.nc"/>
+                    <has_text text="clm2.r.2000-01-01-01800.nc"/>
+                </assert_contents>
             </output>
             <output_collection name="history_files" count="0">
             </output_collection>
         </test>
         <test>
-            <param name="inputdata" value="inputdata_test.tar" />
-            <param name="casename" value="one_month" />
-            <param name="resolution" value="1x1_ALP1" />
-            <param name="stop_option" value="nmonths" />
-            <param name="stopn" value="1" />
+            <param name="inputdata" value="inputdata_test.tar"/>
+            <param name="casename" value="one_month"/>
+            <param name="resolution" value="1x1_ALP1"/>
+            <section name="adv_period">
+                <param name="stop_option" value="nmonths"/>
+                <param name="stopn" value="1"/>
+            </section>
             <output name="atm_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="(datm_comp_final) atm: end of main integration loop" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="(datm_comp_final) atm: end of main integration loop"/>
+                </assert_contents>
             </output>
             <output name="cesm_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="pes participating in computation for CLM" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="pes participating in computation for CLM"/>
+                </assert_contents>
             </output>
             <output name="cpl_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="SUCCESSFUL TERMINATION" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="SUCCESSFUL TERMINATION"/>
+                </assert_contents>
             </output>
             <output name="lnd_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="Successfully" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="Successfully"/>
+                </assert_contents>
             </output>
             <output name="rof_log" ftype="txt">
-              <assert_contents>
-                  <has_text text="MOSART model initialization" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="MOSART model initialization"/>
+                </assert_contents>
             </output>
             <output name="restart" ftype="tar">
-              <assert_contents>
-                  <has_size value="6348800" delta="5000"/>
-              </assert_contents>
+                <assert_contents>
+                    <has_size value="6348800" delta="5000"/>
+                </assert_contents>
             </output>
-         
             <output name="rinfo" ftype="txt">
-              <assert_contents>
-                  <has_text text="datm.r.2000-02-01-00000.nc" />
-                  <has_text text="datm.rs1.2000-02-01-00000.bin" />
-                  <has_text text="cpl.r.2000-02-01-00000.nc" />
-                  <has_text text="clm2.r.2000-02-01-00000.nc" />
-              </assert_contents>
+                <assert_contents>
+                    <has_text text="datm.r.2000-02-01-00000.nc"/>
+                    <has_text text="datm.rs1.2000-02-01-00000.bin"/>
+                    <has_text text="cpl.r.2000-02-01-00000.nc"/>
+                    <has_text text="clm2.r.2000-02-01-00000.nc"/>
+                </assert_contents>
             </output>
             <output_collection name="history_files" count="1">
             </output_collection>
         </test>
-
     </tests>
     <help><![CDATA[
 
@@ -354,16 +376,18 @@ Finnmark Site:
 
     ]]></help>
     <citations>
-
+        <citation type="bibtex">
+			@misc{emerald_webinar_2020,
+			  author       = {Tang, J. and others},
+			  title        = {Webinar: CLM-FATES Platform},
+			  year         = {2020},
+			  month        = {August},
+			  howpublished = {\url{https://www.mn.uio.no/geo/english/research/projects/emerald/events/webinar_aug-2020_tang_clm_fates_platform.pdf}},
+			  note         = {Webinar presentation on the CLM-FATES platform, part of the EMERALD project.}
+			}
+			</citation>
     </citations>
-    <edam_topics>
-      <edam_topic>topic_3855</edam_topic>
-      <edam_topic>topic_3318</edam_topic>
-      <edam_topic>topic_3050</edam_topic>
-      <edam_topic>topic_0610</edam_topic>
-    </edam_topics>
-    <edam_operations>
-      <edam_operation>operation_3946</edam_operation>
-      <edam_operation>operation_2426</edam_operation>
-    </edam_operations>
+    <creator>
+        <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+    </creator>
 </tool>

@@ -1,6 +1,7 @@
 <macros>
     <token name="@TOOL_VERSION@">2.0.0</token>
-    <token name="@VERSION_SUFFIX@">0</token>
+    <token name="@VERSION_SUFFIX@">1</token>
+    <token name="@PROFILE@">25.1</token>
     <xml name="cdo_requirements">
         <requirements>
             <requirement type="package" version="@TOOL_VERSION@">cdo</requirement>
@@ -17,17 +18,22 @@
     <xml name="cdo_stdio">
         <stdio>
             <!-- Anything other than zero or one is an error -->
-            <exit_code range="2:" />
+            <exit_code range="2:"/>
             <exit_code range=":-1"/>
             <!-- In case the return code has not been set propery check stderr too -->
-            <regex match="Error" />
-            <regex match="Exception" />
-            <regex match="Abort" />
+            <regex match="Error"/>
+            <regex match="Exception"/>
+            <regex match="Abort"/>
         </stdio>
     </xml>
     <xml name="citations">
         <citations>
             <citation type="doi">10.5281/zenodo.3539275</citation>
         </citations>
+    </xml>
+    <xml name="creator">
+        <creator>
+            <person givenName="Anne" familyName="Fouilloux" url="https://orcid.org/0000-0002-1784-2920"/>
+        </creator>
     </xml>
 </macros>

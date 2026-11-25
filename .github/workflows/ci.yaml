@@ -14,7 +14,7 @@ env:
 jobs:
   setup:
     name: Setup cache and determine changed repositories
-    if: ${{ github.repository_owner == 'NordicESMhub' }}
+    if: ${{ github.repository_owner == 'earth-data-community' }}
     runs-on: ubuntu-latest
     outputs:
       galaxy-head-sha: ${{ steps.get-galaxy-sha.outputs.galaxy-head-sha }}
@@ -45,7 +45,7 @@ jobs:
     - name: Determine latest commit in the Galaxy repo
       id: get-galaxy-sha
       run: echo "galaxy-head-sha=$(git ls-remote https://github.com/${{ steps.get-fork-branch.outputs.fork }}/galaxy refs/heads/${{ steps.get-fork-branch.outputs.branch }} | cut -f1)" >> $GITHUB_OUTPUT
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -58,7 +58,7 @@ jobs:
     # are not available as wheels, pip will build a wheel for them, which can be cached.
     - name: Install wheel
       run: pip install wheel
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
     - name: Fake a Planemo run to update cache and determine commit range, repositories, and chunks
@@ -86,10 +86,10 @@ jobs:
       matrix:
         python-version: ['3.11']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -134,10 +134,10 @@ jobs:
         ports:
           - 5432:5432
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         persist-credentials: false
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
@@ -151,12 +151,6 @@ jobs:
       id: cpu-cores
     - name: Clean dotnet folder for space
       run: rm -Rf /usr/share/dotnet
-    - name: Create Copernicus Climate Change Config file
-      uses: jwsi/secret-parser@v1
-      with:
-        filename: tools/essential_climate_variables/cdsapirc.cfg
-        secret-name: GALAXY_COPERNICUS_CDSAPIRC_KEY
-        secret-value: ${{ secrets.GALAXY_COPERNICUS_CDSAPIRC_KEY }}
     - name: Create Copernicus Atmosphere Monitoring Config file
       uses: jwsi/secret-parser@v1
       with:
@@ -206,7 +200,7 @@ jobs:
     - uses: actions/download-artifact@v8
       with:
         path: artifacts
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip

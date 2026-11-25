@@ -1,25 +1,22 @@
-<?xml version="1.0"?>
-
 <config_compilers version="2.0">
-
-  <compiler COMPILER="gnu" MACH="espresso">
-    <LD>mpifort</LD>
-    <AR>x86_64-conda_cos6-linux-gnu-ar</AR>
-    <SFC>x86_64-conda_cos6-linux-gnu-gfortran</SFC>
-    <SCC>x86_64-conda_cos6-linux-gnu-cc</SCC>
-    <SCXX>x86_64-conda_cos6-linux-gnu-c++</SCXX>
-    <MPIFC>mpifort</MPIFC>
-    <MPICC>mpicc</MPICC>
-    <MPICXX>mpicxx</MPICXX>
-    <NETCDF_PATH>$ENV{CONDA_PREFIX}</NETCDF_PATH>
-    <FFLAGS>
-      <append DEBUG="FALSE"> -O2 </append>
-      <append MODEL="micom"> -fdefault-real-8 </append>
-      <append MODEL="cam"> -finit-local-zero </append>
-    </FFLAGS>
-    <SLIBS>
-      <append> -L$(NETCDF_PATH)/lib -lnetcdff -lnetcdf -ldl </append>
-      <append> -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -fopenmp </append>
-    </SLIBS>
-  </compiler>
+    <compiler COMPILER="gnu" MACH="espresso">
+        <LD>mpifort</LD>
+        <AR>x86_64-conda_cos6-linux-gnu-ar</AR>
+        <SFC>x86_64-conda_cos6-linux-gnu-gfortran</SFC>
+        <SCC>x86_64-conda_cos6-linux-gnu-cc</SCC>
+        <SCXX>x86_64-conda_cos6-linux-gnu-c++</SCXX>
+        <MPIFC>mpifort</MPIFC>
+        <MPICC>mpicc</MPICC>
+        <MPICXX>mpicxx</MPICXX>
+        <NETCDF_PATH>$ENV{CONDA_PREFIX}</NETCDF_PATH>
+        <FFLAGS>
+            <append DEBUG="FALSE"> -O2 </append>
+            <append MODEL="micom"> -fdefault-real-8 </append>
+            <append MODEL="cam"> -finit-local-zero </append>
+        </FFLAGS>
+        <SLIBS>
+            <append> -L$(NETCDF_PATH)/lib -lnetcdff -lnetcdf -ldl </append>
+            <append> -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -fopenmp </append>
+        </SLIBS>
+    </compiler>
 </config_compilers>
