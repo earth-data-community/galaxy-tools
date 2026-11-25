@@ -1,0 +1,6 @@
+site_name,date,T_Q,PRELIQ_Q,longitude,latitude,temperature_2m_mean,soil_moisture_0_to_7cm_mean
+Montpellier,1995-01-01,7.5,0.0,3.8711,43.632,7.3,0.339
+Montpellier,1995-01-02,2.7,1.2,3.8711,43.632,4.3,0.324
+Montpellier,1995-01-03,2.2,0.0,3.8711,43.632,3.2,0.314
+Paris_centre,1995-01-01,3.1,0.4,2.391,48.823,,
+Paris_centre,1995-01-02,2.0,0.0,2.391,48.823,,

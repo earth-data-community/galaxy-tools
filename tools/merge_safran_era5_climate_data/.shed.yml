@@ -1,0 +1,16 @@
+name: merge_safran_era5_climate_data
+owner: climate
+description: Join SAFRAN and ERA5 climate data files by site and date
+long_description: |
+  Combines a SAFRAN climate reanalysis file (metropolitan France, from the
+  GEOSAS OGC-EDR API) and an ERA5 / ERA5-Land reanalysis file for the same
+  sites into a single table, matched on a site identifier and a date column.
+  Used to complete SAFRAN atmospheric variables (temperature, precipitation,
+  potential evapotranspiration) with ERA5 variables that SAFRAN does not
+  provide, such as depth-resolved soil moisture and soil temperature, for
+  ecological and agronomic modelling workflows.
+homepage_url: https://github.com/galaxyecology/tools-ecology/tree/master/tools/merge_safran_era5_climate_data
+remote_repository_url: https://github.com/galaxyecology/tools-ecology/tree/master/tools/merge_safran_era5_climate_data
+type: unrestricted
+categories:
+  - Climate Analysis
