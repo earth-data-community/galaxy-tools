@@ -6,11 +6,11 @@
     <expand macro="creator"/>
     <expand macro="requirements"/>
     <required_files>
-        <include path="climate_to_stics.py"/>
+        <include path="climate_to_stics_format.py"/>
     </required_files>
-    <version_command>python '$__tool_directory__/climate_to_stics.py' --version</version_command>
+    <version_command>python '$__tool_directory__/climate_to_stics_format.py' --version</version_command>
     <command detect_errors="exit_code"><![CDATA[
-python '$__tool_directory__/climate_to_stics.py'
+python '$__tool_directory__/climate_to_stics_format.py'
     --source_type '$data_source.source_type'
 #if $data_source.source_type in ['era5', 'safran']:
     --input_file '$data_source.input.input_file'
