@@ -295,8 +295,10 @@ OPENMETEO_MAPPING: Dict = {
         "unit_out": "m/s  (2 m height, after correction)",
         "conversion": "kmh_to_ms_height",
     },
-    "hr":     {"names": ["relative_humidity_2m_mean"], "unit_in": "%",
-               "unit_out": "%", "conversion": None},
+    "hr": {
+        "names": ["relative_humidity_2m_mean"], "unit_in": "%",
+        "unit_out": "%", "conversion": None,
+    },
 }
 
 # INRAE AgroClim network, daily station files ------------------------------
@@ -343,9 +345,9 @@ AGROCLIM_STATION_COLUMN = "station_id"
 
 # Aggregated lookup
 ALL_MAPPINGS = {
-    "era5":     ERA5_MAPPING,
-    "safran":   SAFRAN_MAPPING,
-    "drias":    DRIAS_MAPPING,
+    "era5": ERA5_MAPPING,
+    "safran": SAFRAN_MAPPING,
+    "drias": DRIAS_MAPPING,
     "agroclim": AGROCLIM_MAPPING,
 }
 
@@ -463,7 +465,7 @@ def fetch_mauna_loa_co2() -> pd.DataFrame:
         )
         return pd.DataFrame(
             {"year": list(MLO_CO2_FALLBACK),
-             "co2":  list(MLO_CO2_FALLBACK.values())}
+             "co2": list(MLO_CO2_FALLBACK.values())}
         )
 
 
@@ -649,11 +651,11 @@ def load_drias_zip(zip_path: str, extract_dir: str) -> Dict[str, xr.Dataset]:
     patterns = {
         "tasmax": "*tasmax*.nc",
         "tasmin": "*tasmin*.nc",
-        "huss":   "*huss*.nc",
-        "wind":   "*sfcWind*.nc",
-        "rsds":   "*rsds*.nc",
-        "prtot":  "*prtot*.nc",
-        "etp":    "*evspsblpot*.nc",
+        "huss": "*huss*.nc",
+        "wind": "*sfcWind*.nc",
+        "rsds": "*rsds*.nc",
+        "prtot": "*prtot*.nc",
+        "etp": "*evspsblpot*.nc",
     }
 
     datasets: Dict[str, xr.Dataset] = {}
@@ -1084,7 +1086,7 @@ def export_stics_files(
 
         years = sorted(df_c["Year"].unique())
         logging.info(
-            f"  [{idx+1:>4}/{n_cells}] cell {int(cell_id):>6} – "
+            f"  [{idx + 1:>4}/{n_cells}] cell {int(cell_id):>6} – "
             f"{len(years)} years [{min(years)}–{max(years)}]"
         )
 
