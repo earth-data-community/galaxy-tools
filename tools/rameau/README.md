@@ -36,6 +36,7 @@ Several modes can be selected in a single job; optimization is then always run f
 ## Requirements
 
 Docker container [`brgmcode/rameau`](https://hub.docker.com/r/brgmcode/rameau), which wraps the [`rameau`](https://pypi.org/project/rameau/) Python package.
+Dockerfile accessible on [earth data community](https://github.com/earth-data-community/docker-images/tree/main/rameau-image)
 
 ## Notes
 
