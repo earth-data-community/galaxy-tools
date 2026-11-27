@@ -1,0 +1,24 @@
+name: climate_to_stics_format
+owner: climate
+description: Convert daily weather data (ERA5, SAFRAN, DRIAS-2020, AgroClim or custom tables) into STICS crop model input files
+long_description: |
+  Converts daily weather data into the input files of the STICS crop model.
+  Supported sources are ERA5 (Open-Meteo daily tables or Copernicus CDS
+  NetCDF grids), SAFRAN (GeoSAS exports, Météo-France SIM2 files or NetCDF
+  grids), DRIAS-2020 climate projections (ZIP archive of NetCDF files), the
+  INRAE AgroClim weather station network (daily files from Recherche Data
+  Gouv, doi:10.57745/BQ0BWB) and custom tables whose columns and units are
+  selected in the form.
+
+  Variables are renamed and converted to STICS units, vapour pressure and
+  wind speed at 2 m are derived when needed, and the annual atmospheric CO2
+  concentration (NOAA/GML Mauna Loa series from 1959, ice-core record
+  before) is appended. Gridded data are assigned to cells with a shapefile
+  (pixels averaged per cell) or kept pixel by pixel. The output is a ZIP
+  archive with one space-separated STICS file per cell and per year, plus a
+  processing log.
+remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/climate_to_stics_format
+homepage_url: https://github.com/earth-data-community/galaxy-tools/tree/main/tools/climate_to_stics_format
+type: unrestricted
+categories:
+  - Climate Analysis

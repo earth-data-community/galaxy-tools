@@ -1,5 +1,5 @@
 name: build_heterofor_forcing
-owner: climate
+owner: ecology
 description: Build hourly HETEROFOR forcing files from SAFRAN reanalysis data regridded onto RENECOFOR plots
 long_description: |
   This tool builds hourly meteorological forcing files for the HETEROFOR
@@ -25,8 +25,8 @@ long_description: |
   This tool wraps a cleaned-up, parameterised version of an R script
   originally written by Annemiek I Stegehuis to prepare SAFRAN/RENECOFOR
   forcing data for HETEROFOR runs at the ALAMOD project plots.
-remote_repository_url: https://github.com/earth-data-community/galaxy-tools/tree/master/tools/build_heterofor_forcing
-homepage_url: https://github.com/earth-data-community/galaxy-tools/tree/master/tools/build_heterofor_forcing
+remote_repository_url: https://github.com/galaxyecology/tools-ecology/tree/master/tools/build_heterofor_forcing
+homepage_url: https://github.com/galaxyecology/tools-ecology/tree/master/tools/build_heterofor_forcing
 type: unrestricted
 categories:
   - Climate Analysis

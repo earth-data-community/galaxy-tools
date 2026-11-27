@@ -1,0 +1,59 @@
+<macros>
+    <token name="@TOOL_VERSION@">1.1.0</token>
+    <token name="@VERSION_SUFFIX@">0</token>
+    <token name="@PROFILE@">25.1</token>
+    <xml name="requirements">
+        <requirements>
+            <requirement type="package" version="3.12">python</requirement>
+            <requirement type="package" version="2024.10.0">xarray</requirement>
+            <requirement type="package" version="2.2.3">pandas</requirement>
+            <requirement type="package" version="1.26.4">numpy</requirement>
+            <requirement type="package" version="1.0.1">geopandas</requirement>
+            <requirement type="package" version="1.4.1">rasterio</requirement>
+            <requirement type="package" version="0.17.0">rioxarray</requirement>
+            <requirement type="package" version="1.7.1">netcdf4</requirement>
+        </requirements>
+    </xml>
+    <xml name="creator">
+        <creator>
+            <person givenName="Mathieu" familyName="Guimont"/>
+            <person givenName="Patrick" familyName="Chabrier"/>
+            <person givenName="Kenji" familyName="Fujisaki"/>
+            <organization name="INRAE" url="https://www.inrae.fr"/>
+            <organization name="Data Terra" url="https://www.data-terra.org"/>
+            <organization name="ALAMOD"/>
+        </creator>
+    </xml>
+    <!-- Wind height correction, shared by every source measured at 10 m -->
+    <xml name="wind_correction_factor">
+        <param name="wind_correction_factor" type="float" value="0.7" min="0.1" max="1.0" label="Wind height correction factor (10 m to 2 m)" help="Multiplies the 10 m wind speed to estimate it at 2 m, the STICS reference height. 0.7 ≈ ln(2/0.03)/ln(10/0.03) (logarithmic profile). Set to 1.0 to disable the correction."/>
+    </xml>
+    <xml name="epsg" tokens="default_epsg">
+        <param name="epsg" type="text" value="@DEFAULT_EPSG@" label="Projection of the NetCDF grid (EPSG code)" help="For example EPSG:4326 (WGS84 longitude/latitude), EPSG:2154 (Lambert-93) or EPSG:27572 (extended Lambert II, SAFRAN and DRIAS grids).">
+            <validator type="regex" message="Expected format: EPSG:XXXX (e.g. EPSG:4326)">^EPSG:\d+$</validator>
+        </param>
+    </xml>
+    <xml name="shapefile_zip" tokens="optional,absent_help">
+        <param name="shapefile_zip" type="data" format="zip" optional="@OPTIONAL@" label="Spatial cells shapefile (ZIP archive)" help="ZIP archive with the .shp, .shx, .dbf and .prj files. Polygons need an integer 'cell' column: it becomes the cell ID of the STICS files, and the daily values of the grid pixels inside each polygon are averaged. @ABSENT_HELP@"/>
+    </xml>
+    <!-- Gridded NetCDF input: file, projection and optional cell shapefile -->
+    <xml name="netcdf_input" tokens="default_epsg,variables">
+        <param name="input_file" type="data" format="netcdf" label="Daily gridded NetCDF file" help="Expected variables: @VARIABLES@."/>
+        <expand macro="epsg" default_epsg="@DEFAULT_EPSG@"/>
+        <expand macro="shapefile_zip" optional="true" absent_help="If no shapefile is given, every grid pixel becomes its own cell, numbered 0..N-1 in row-major order."/>
+    </xml>
+    <!-- Tabular input with a column holding the cell/site ID -->
+    <xml name="cell_id_column">
+        <param name="cell_id_column" type="data_column" data_ref="input_file" use_header_names="true" optional="true" label="Cell / site ID column" help="Column identifying each spatial cell or site; it becomes the name of the STICS files. Non-integer IDs (site names) are numbered 1..N in sorted order, the correspondence being written to the log. If no column is selected, all rows are treated as a single site with ID 1.">
+            <validator type="no_options" message="The selected dataset has no columns."/>
+        </param>
+    </xml>
+    <xml name="tabular_input" tokens="variables">
+        <param name="input_file" type="data" format="csv,tabular" label="Daily climate table" help="Comma, semicolon, tab or pipe separated, with a header line. Lines starting with '#' are skipped. Expected columns: @VARIABLES@."/>
+        <expand macro="cell_id_column"/>
+    </xml>
+    <!-- Column selector for the custom source -->
+    <xml name="custom_column" tokens="name,label,optional,absent_help">
+        <param name="@NAME@" type="data_column" data_ref="input_file" use_header_names="true" optional="@OPTIONAL@" label="@LABEL@" help="@ABSENT_HELP@"/>
+    </xml>
+</macros>
