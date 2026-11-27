@@ -1,0 +1,328 @@
+name = "simulation"
+starting_date = 1990-08-09T00:00:00
+
+[files]
+states = ""
+tree = "arbros.csv"
+groundwaterobs = "piezo"
+rainfall = "pluie"
+riverobs = "debit"
+pet = "etp"
+
+[input_format]
+meteo_files = false
+
+[outputs]
+budget = false
+metrics = true
+parameters = true
+toml = true
+states = true
+
+[spinup]
+starting_date = 1990-08-09T00:00:00
+ending_date = 1993-01-01T00:00:00
+cycles = 3
+
+[forecast]
+forecast = true
+correction = "halflife"
+quantiles_output = true
+quantiles = [ 10, 20, 50, 80, 90,]
+norain = true
+
+[optimization]
+maxit = 0
+starting_date = 1993-01-01T00:00:00
+transformation = "square root"
+method = "all"
+river_objective_function = "nse"
+verbose = true
+
+[watershed.all]
+name = ""
+is_confluence = false
+
+[watershed.1]
+name = "Watershed 1"
+
+[watershed.all.meteo]
+columns = [ 1,]
+weights = [ 1.0,]
+
+[watershed.all.river]
+weight = 0.0
+obslim = [ 0.0, 0.0,]
+
+[watershed.all.progressive]
+pet_decrease = false
+
+[watershed.all.groundwater]
+weight = 1.0
+obslim = [ 0.0, 0.0,]
+observed_reservoir = 1
+
+[watershed.all.river.area]
+value = 1.0
+opti = false
+
+[watershed.all.river.minimum_riverflow]
+value = 0.0
+opti = false
+
+[watershed.all.river.concentration_time]
+value = 0.15
+lower = 0.0
+upper = 10.0
+opti = false
+sameas = 0
+
+[watershed.all.river.propagation_time]
+value = 0.0
+lower = 0.0
+upper = 45.0
+opti = false
+sameas = 0
+
+[watershed.all.progressive.capacity]
+value = 74.12697
+lower = 0.0
+upper = 500.0
+opti = true
+sameas = 0
+
+[watershed.all.groundwater.base_level]
+value = 111.37412
+opti = true
+
+[watershed.all.groundwater.storage]
+regression = true
+
+[watershed.all.forecast.river]
+halflife = 0.0
+halflife_estimation = false
+
+[watershed.all.forecast.groundwater]
+halflife = 3
+halflife_estimation = false
+
+[watershed.all.correction.area]
+value = 1.0
+lower = 0.8
+upper = 1.2
+opti = false
+sameas = 0
+
+[watershed.all.correction.rainfall]
+value = 3.19104
+lower = -15.0
+upper = 15.0
+opti = true
+sameas = 0
+
+[watershed.all.correction.pet]
+value = -10.03206
+lower = -20.0
+upper = 20.0
+opti = true
+sameas = 0
+
+[watershed.all.thornthwaite.capacity]
+value = 2.88053
+lower = 0.0
+upper = 500.0
+opti = true
+sameas = 0
+
+[watershed.all.transfer.runsee]
+value = 162.93274
+lower = 0.0
+upper = 950.0
+opti = true
+sameas = 0
+
+[watershed.all.transfer.halflife]
+value = 0.15108
+lower = 0.01
+upper = 8.0
+opti = true
+sameas = 0
+
+[watershed.all.transfer.overflow]
+loss = "no"
+
+[watershed.all.snow.retention]
+value = 5.0
+lower = 0.001
+upper = 30.0
+opti = false
+sameas = 0
+
+[watershed.all.snow.melting]
+value = 5.0
+lower = 0.001
+upper = 20.0
+opti = false
+sameas = 0
+
+[watershed.all.groundwater.storage.coefficient]
+value = 1.08143
+lower = 0.02
+upper = 50.0
+opti = true
+sameas = 0
+
+[watershed.all.groundwater.1.halflife_baseflow]
+value = 1.84904
+lower = 0.01
+upper = 70.0
+opti = true
+sameas = 0
+
+[watershed.all.groundwater.1.halflife_drainage]
+value = 0.0
+lower = 0.5
+upper = 500.0
+opti = false
+sameas = 0
+
+[watershed.all.groundwater.1.exchanges]
+value = 0.0
+lower = -60.0
+upper = 60.0
+opti = true
+sameas = 0
+
+[watershed.all.groundwater.2.halflife_baseflow]
+value = 0.0
+lower = 0.01
+upper = 70.0
+opti = false
+sameas = 0
+
+[watershed.all.groundwater.2.halflife_drainage]
+value = 0.0
+lower = 0.05
+upper = 50.0
+opti = false
+sameas = 0
+
+[watershed.all.groundwater.2.exchanges]
+value = 0.0
+lower = -20.0
+upper = 20.0
+opti = false
+sameas = 0
+
+[watershed.all.transfer.overflow.threshold]
+value = 0.0
+lower = 0.0
+upper = 999.0
+opti = false
+sameas = 0
+
+[watershed.all.transfer.overflow.halflife]
+value = 0.06
+lower = 0.06
+upper = 30.0
+opti = false
+sameas = 0
+
+[watershed.all.snow.correction.temperature]
+value = 0.0
+lower = -3.0
+upper = 3.0
+opti = false
+sameas = 0
+
+[watershed.all.snow.correction.pet]
+value = 0.0
+lower = -20.0
+upper = 20.0
+opti = false
+sameas = 0
+
+[watershed.all.snow.correction.rainfall]
+value = 0.0
+lower = -20.0
+upper = 20.0
+opti = false
+sameas = 0
+
+[watershed.all.snow.degree_day.coefficient]
+value = 4.0
+lower = 0.001
+upper = 7.0
+opti = false
+sameas = 0
+
+[watershed.all.snow.degree_day.temperature]
+value = 0.0
+lower = -2.0
+upper = 2.0
+opti = false
+sameas = 0
+
+[watershed.all.pumping.river.coefficient]
+value = 0.0
+opti = false
+
+[watershed.all.pumping.river.halflife_rise]
+value = 0.4
+lower = 0.15
+upper = 10.0
+opti = false
+sameas = 0
+
+[watershed.all.pumping.river.halflife_fall]
+value = 1.2
+lower = 0.15
+upper = 15.0
+opti = false
+sameas = 0
+
+[watershed.all.pumping.groundwater.coefficient]
+value = 0.0
+opti = false
+
+[watershed.all.pumping.groundwater.halflife_rise]
+value = 1.3
+lower = 0.15
+upper = 10.0
+opti = false
+sameas = 0
+
+[watershed.all.pumping.groundwater.halflife_fall]
+value = 1.8
+lower = 0.15
+upper = 15.0
+opti = false
+sameas = 0
+
+[watershed.all.groundwater.1.overflow.threshold]
+value = 111.90567
+lower = 0.0
+upper = 400.0
+opti = true
+sameas = 0
+
+[watershed.all.groundwater.1.overflow.halflife]
+value = 1.05153
+lower = 0.01
+upper = 45.0
+opti = true
+sameas = 0
+
+[watershed.all.groundwater.2.overflow.threshold]
+value = 0.0
+lower = 0.0
+upper = 9999.0
+opti = false
+sameas = 0
+
+[watershed.all.groundwater.2.overflow.halflife]
+value = 0.0
+lower = 0.001
+upper = 20.0
+opti = false
+sameas = 0
